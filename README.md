@@ -18,6 +18,9 @@ Requires Node.js 20 or newer.
    OPENROUTER_API_KEY=your_openrouter_api_key_here
    ```
 
+   The embedded graph uses Desmos' development demo key by default. Set
+   `DESMOS_API_KEY` in `.env` when you have your own Desmos API key.
+
 3. Create a Python environment and install the verifier dependencies:
 
    ```sh

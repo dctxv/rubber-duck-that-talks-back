@@ -83,6 +83,7 @@
     .problem-apply { border-color: var(--rule); white-space: nowrap; }
     .problem-upload { width: 34px; padding: 0; font-size: 16px; }
     .tools { display: flex; gap: 4px; }
+    #oneMoreButton { border-color: var(--accent); color: #715326; }
 
     button {
       height: 34px;
@@ -114,10 +115,73 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
-      padding: 24px 26px 20px;
       border-left: 1px solid #cccbc4;
       background: #f5f4ef;
     }
+
+    .panel-tabs {
+      flex: 0 0 44px;
+      display: flex;
+      align-items: end;
+      gap: 18px;
+      padding: 0 26px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .panel-tab {
+      height: 44px;
+      padding: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: var(--muted);
+    }
+
+    .panel-tab:hover { background: transparent; color: var(--ink); }
+    .panel-tab.active { border-bottom-color: var(--accent); background: transparent; color: var(--ink); }
+    .panel-view[hidden] { display: none !important; }
+
+    .tutor-view {
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 26px 20px;
+    }
+
+    .graph-panel {
+      position: relative;
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+    }
+
+    .graph-caption {
+      flex: 0 0 auto;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .graph-host { min-height: 0; flex: 1; }
+
+    .graph-status {
+      position: absolute;
+      inset: 48px 0 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--paper);
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .graph-status[hidden] { display: none; }
 
     .tutor-identity {
       display: flex;
@@ -271,6 +335,117 @@
       font: 12px/20px ui-monospace, SFMono-Regular, Consolas, monospace;
     }
 
+    /* Read-only evidence view. Kept separate from the workspace UI. */
+    .receipt-view {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      overflow-y: auto;
+      background: #f1f0eb;
+    }
+
+    .receipt-view[hidden] { display: none; }
+
+    .receipt-page {
+      width: min(920px, calc(100% - 64px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 34px 48px 60px;
+      background: var(--paper);
+    }
+
+    .receipt-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .receipt-kicker {
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .receipt-title { margin: 0; font: 600 28px/1.15 inherit; }
+    .receipt-close { border-color: var(--rule); }
+
+    .receipt-problem {
+      margin: 26px 0 0;
+      color: #343531;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .receipt-status {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .receipt-evidence {
+      margin: 28px 0;
+      padding: 18px 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .receipt-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--rule);
+      border-left: 1px solid var(--rule);
+    }
+
+    .receipt-metric {
+      min-height: 116px;
+      padding: 16px;
+      border-right: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .receipt-metric.hero { background: #f0eee5; border-top: 2px solid var(--accent); }
+    .receipt-metric-label { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .receipt-metric-value { margin-top: 8px; font-size: 25px; line-height: 1; }
+    .receipt-metric-detail { margin-top: 9px; color: #62635e; font-size: 11px; line-height: 1.4; }
+
+    .receipt-section-title {
+      margin: 34px 0 12px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .receipt-derivation { border-top: 1px solid var(--rule); }
+
+    .receipt-line {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) 92px;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--rule);
+      align-items: start;
+    }
+
+    .receipt-line-number, .receipt-line-verdict { color: var(--muted); font-size: 11px; }
+    .receipt-line-verdict { text-align: right; }
+    .receipt-line-math { min-width: 0; font-size: 14px; }
+    .receipt-line-nudges { grid-column: 2 / 4; color: #666761; font-size: 11px; line-height: 1.5; }
+
+    .receipt-empty {
+      padding: 22px 0;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
   </style>
 </head>
 <body>
@@ -284,6 +459,8 @@
           <input class="problem-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
         </div>
         <nav class="tools" aria-label="Ink tools">
+          <button id="oneMoreButton" type="button" hidden>One more like this</button>
+          <button id="receiptButton" type="button">Receipt</button>
           <button id="penButton" class="active" type="button" aria-pressed="true">Pen</button>
           <button id="eraserButton" type="button" aria-pressed="false">Eraser</button>
           <button id="undoButton" type="button" title="Undo in the active line">Undo</button>
@@ -294,28 +471,55 @@
       </div>
     </section>
 
-    <aside class="tutor-panel" aria-label="Tutor panel">
-      <div class="tutor-identity">
-        <div class="duck-avatar" aria-hidden="true">🦆</div>
-        <div>
-          <div class="tutor-name-row">
-            <span class="tutor-name">Rubber duck</span>
-            <span class="status-dot watching" title="Watching"></span>
+    <aside class="tutor-panel" aria-label="Workspace side panel">
+      <nav class="panel-tabs" aria-label="Side panel">
+        <button class="panel-tab active" type="button" data-panel="tutor" aria-selected="true">Tutor</button>
+        <button class="panel-tab" type="button" data-panel="graph" aria-selected="false">Graph</button>
+      </nav>
+
+      <div class="tutor-view panel-view" data-panel-view="tutor">
+        <div class="tutor-identity">
+          <div class="duck-avatar" aria-hidden="true">🦆</div>
+          <div>
+            <div class="tutor-name-row">
+              <span class="tutor-name">Rubber duck</span>
+              <span class="status-dot watching" title="Watching"></span>
+            </div>
+            <div class="status-label">watching</div>
           </div>
-          <div class="status-label">watching</div>
         </div>
+
+        <div class="nudge-feed" aria-label="Tutor nudges"></div>
+
+        <form class="ask-form">
+          <input class="ask-input" type="text" placeholder="ask, but expect a question back" aria-label="Ask the duck">
+          <button class="send-button" type="submit">Send</button>
+        </form>
       </div>
 
-      <div class="nudge-feed" aria-label="Tutor nudges"></div>
-
-      <form class="ask-form">
-        <input class="ask-input" type="text" placeholder="ask, but expect a question back" aria-label="Ask the duck">
-        <button class="send-button" type="submit">Send</button>
-      </form>
+      <section class="graph-panel panel-view" data-panel-view="graph" aria-label="Step graph" hidden>
+        <div class="graph-caption">Horizontal axis represents the unknown · current equation solid · previous equation dashed</div>
+        <div id="desmosCalculator" class="graph-host"></div>
+        <div class="graph-status">Open the graph after writing an equation.</div>
+      </section>
     </aside>
   </div>
 
+  <section class="receipt-view" aria-label="Work receipt" hidden>
+    <article class="receipt-page">
+      <header class="receipt-header">
+        <div>
+          <div class="receipt-kicker">Work receipt</div>
+          <h1 class="receipt-title">Evidence of working</h1>
+        </div>
+        <button class="receipt-close" type="button">Back to workspace</button>
+      </header>
+      <div class="receipt-content"></div>
+    </article>
+  </section>
+
   <script src="/vendor/katex/katex.min.js"></script>
+  <script src="/config.js"></script>
   <script>
     (() => {
       const BAND_HEIGHT = 90;
@@ -323,6 +527,9 @@
       const EXPORT_PADDING = 12;
       const BASE_WIDTH = 3.15;
       const ERASER_RADIUS = 12;
+      const STORAGE_KEY = 'rubber-duck-worksheet';
+      const SCHEMA_VERSION = 1;
+      const SAVE_DEBOUNCE_MS = 300;
       const worksheet = document.querySelector('#worksheet');
       const problemInput = document.querySelector('.problem-input');
       const problemApplyButton = document.querySelector('.problem-apply');
@@ -337,6 +544,15 @@
       const sendButton = document.querySelector('.send-button');
       const tutorStatusDot = document.querySelector('.status-dot');
       const tutorStatusLabel = document.querySelector('.status-label');
+      const panelTabs = [...document.querySelectorAll('.panel-tab')];
+      const panelViews = [...document.querySelectorAll('[data-panel-view]')];
+      const graphHost = document.querySelector('#desmosCalculator');
+      const graphStatus = document.querySelector('.graph-status');
+      const receiptButton = document.querySelector('#receiptButton');
+      const oneMoreButton = document.querySelector('#oneMoreButton');
+      const receiptView = document.querySelector('.receipt-view');
+      const receiptCloseButton = document.querySelector('.receipt-close');
+      const receiptContent = document.querySelector('.receipt-content');
 
       // Public data model: every point is local to its own band, in CSS pixels.
       const bands = [];
@@ -349,13 +565,119 @@
       let commitTimer = null;
       let resizeObserver = null;
       let tutorRequestsInFlight = 0;
+      let persistenceTimer = null;
+      let isRestoring = false;
+      let persistenceDisabled = false;
+      let desmosCalculator = null;
+      let desmosLoadPromise = null;
+      let lastGoodGraph = null;
+      let solvedState = false;
       const allNudges = [];
-      const restoredProblem = sessionStorage.getItem('pendingProblem');
+      const eventLog = [];
+      window.eventLog = eventLog;
+      let restoredProblem = null;
+      try {
+        restoredProblem = sessionStorage.getItem('pendingProblem');
+      } catch (error) {
+        console.warn('[persistence] could not read pending problem', error);
+      }
+      const savedWorksheet = restoredProblem === null ? readSavedWorksheet() : null;
       if (restoredProblem !== null) {
         problemInput.value = restoredProblem;
-        sessionStorage.removeItem('pendingProblem');
+        try {
+          sessionStorage.removeItem('pendingProblem');
+        } catch (error) {
+          console.warn('[persistence] could not clear pending problem', error);
+        }
+      } else if (savedWorksheet) {
+        problemInput.value = savedWorksheet.activeProblem;
       }
       let activeProblem = problemInput.value.trim();
+
+      function readSavedWorksheet() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          const saved = JSON.parse(raw);
+          if (!saved || saved.schemaVersion !== SCHEMA_VERSION ||
+              typeof saved.activeProblem !== 'string' || !Array.isArray(saved.bands)) {
+            localStorage.removeItem(STORAGE_KEY);
+            return null;
+          }
+          return saved;
+        } catch (error) {
+          console.warn('[persistence] saved worksheet was unreadable; starting fresh', error);
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch (_) {}
+          return null;
+        }
+      }
+
+      function schedulePersist() {
+        if (isRestoring || persistenceDisabled) return;
+        clearTimeout(persistenceTimer);
+        persistenceTimer = setTimeout(persistWorksheet, SAVE_DEBOUNCE_MS);
+      }
+
+      function persistWorksheet() {
+        clearTimeout(persistenceTimer);
+        persistenceTimer = null;
+        if (isRestoring || persistenceDisabled) return;
+        try {
+          const nudgeCards = [...nudgeFeed.querySelectorAll('.nudge-card')].map(card => ({
+            text: card.textContent || '',
+            lineIndex: card.dataset.lineIndex === undefined
+              ? null
+              : Number(card.dataset.lineIndex),
+            resolved: card.classList.contains('resolved')
+          }));
+          const state = {
+            schemaVersion: SCHEMA_VERSION,
+            activeProblem,
+            bands: bands.map(band => ({
+              strokes: cloneStrokes(band.strokes),
+              latex: band.latex,
+              verdict: band.verdict,
+              setupReason: band.setupReason,
+              nudgeHistory: [...band.nudgeHistory]
+            })),
+            nudgeFeed: nudgeCards,
+            allNudges: [...allNudges],
+            events: eventLog.map(event => ({ ...event }))
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.warn('[persistence] worksheet save failed', error);
+        }
+      }
+
+      function clearPersistedWorksheet() {
+        persistenceDisabled = true;
+        clearTimeout(persistenceTimer);
+        persistenceTimer = null;
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+          console.warn('[persistence] could not clear saved worksheet', error);
+        }
+      }
+
+      function appendJourneyEvent(type, line = null, detail = {}, timestamp = Date.now()) {
+        if (isRestoring) return;
+        eventLog.push({
+          t: Number.isFinite(timestamp) ? timestamp : Date.now(),
+          type,
+          line: Number.isInteger(line) ? line : null,
+          detail
+        });
+        schedulePersist();
+      }
+
+      function recordFirstInk(lineIndex) {
+        if (eventLog.some(event => event.type === 'ink_started')) return;
+        appendJourneyEvent('ink_started', lineIndex + 1, {});
+      }
 
       function pressureWidth(pressure) {
         const p = Number.isFinite(pressure) && pressure > 0 ? pressure : 0.5;
@@ -396,6 +718,8 @@
           tutorRevision: 0,
           lastNudgedTutorRevision: -1,
           nudgeHistory: [],
+          selfCorrectionCandidate: null,
+          selfCorrectionPending: null,
           verdictMarker,
           element,
           canvas
@@ -424,6 +748,98 @@
 
       function cloneStrokes(strokes) {
         return strokes.map(stroke => stroke.map(point => ({ ...point })));
+      }
+
+      function sanitizeStrokes(value) {
+        if (!Array.isArray(value)) return [];
+        return value.map(stroke => {
+          if (!Array.isArray(stroke)) return [];
+          return stroke.map(point => {
+            const x = Number(point?.x);
+            const y = Number(point?.y);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            const pressure = Number(point.pressure);
+            const t = Number(point.t);
+            return {
+              x,
+              y,
+              pressure: Number.isFinite(pressure) ? pressure : 0.5,
+              t: Number.isFinite(t) ? t : 0
+            };
+          }).filter(Boolean);
+        }).filter(stroke => stroke.length > 0);
+      }
+
+      function restoreWorksheet(saved) {
+        isRestoring = true;
+        try {
+          activeProblem = saved.activeProblem.trim();
+          problemInput.value = activeProblem;
+
+          if (Array.isArray(saved.events)) {
+            eventLog.push(...saved.events.filter(event =>
+              event && Number.isFinite(event.t) && typeof event.type === 'string'
+            ).map(event => ({
+              t: event.t,
+              type: event.type,
+              line: Number.isInteger(event.line) ? event.line : null,
+              detail: event.detail && typeof event.detail === 'object' ? event.detail : {}
+            })));
+          }
+
+          for (const savedBand of saved.bands) {
+            const band = createBand();
+            band.strokes = sanitizeStrokes(savedBand?.strokes);
+            band.latex = typeof savedBand?.latex === 'string' ? savedBand.latex : '';
+            band.verdict = savedBand?.verdict === true
+              ? true
+              : savedBand?.verdict === false ? false : null;
+            band.setupReason = typeof savedBand?.setupReason === 'string'
+              ? savedBand.setupReason
+              : null;
+            band.nudgeHistory = Array.isArray(savedBand?.nudgeHistory)
+              ? savedBand.nudgeHistory.filter(value => typeof value === 'string')
+              : [];
+
+            const wasCommitted = band.strokes.length > 0 || Boolean(band.latex);
+            band.revision = wasCommitted ? 1 : 0;
+            band.lastCommittedRevision = band.revision;
+            band.tutorRevision = 0;
+            band.lastNudgedTutorRevision = band.nudgeHistory.length ? 0 : -1;
+            syncBandDebugState(band);
+            renderBand(band);
+            renderTranscript(band);
+            renderVerdict(band, band.verdict === true
+              ? { valid: true, errorType: null }
+              : band.verdict === false
+                ? { valid: false, errorType: 'not_equivalent' }
+                : null);
+          }
+
+          const savedCards = Array.isArray(saved.nudgeFeed) ? saved.nudgeFeed : [];
+          for (const savedCard of savedCards) {
+            if (typeof savedCard?.text !== 'string' || !savedCard.text) continue;
+            const card = document.createElement('div');
+            card.className = `nudge-card${savedCard.resolved ? ' resolved' : ''}`;
+            card.textContent = savedCard.text;
+            if (Number.isInteger(savedCard.lineIndex) && savedCard.lineIndex >= 0) {
+              card.dataset.lineIndex = savedCard.lineIndex;
+            }
+            nudgeFeed.append(card);
+          }
+
+          const restoredNudges = Array.isArray(saved.allNudges)
+            ? saved.allNudges.filter(value => typeof value === 'string')
+            : savedCards.map(card => card?.text).filter(value => typeof value === 'string').reverse();
+          allNudges.push(...restoredNudges);
+
+          if (!bands.length) createBand();
+          const lastBand = bands[bands.length - 1];
+          if (lastBand.strokes.length || lastBand.latex) createBand();
+          updateProblemDraftState();
+        } finally {
+          isRestoring = false;
+        }
       }
 
       function saveUndoState(band) {
@@ -462,6 +878,10 @@
         band.canvas.setPointerCapture(event.pointerId);
 
         if (tool === 'pen') {
+          recordFirstInk(index);
+          if (band.verdict === false) {
+            band.selfCorrectionCandidate = { from: band.latex };
+          }
           // Ink changes invalidate a transcription before the next commit fires.
           band.transcriptionVersion++;
           invalidateAffectedVerifications(index);
@@ -522,6 +942,9 @@
         }
         if (!hitIndexes.size) return;
         if (!gesture.undoSaved) {
+          if (band.verdict === false) {
+            band.selfCorrectionCandidate = { from: band.latex };
+          }
           band.transcriptionVersion++;
           invalidateAffectedVerifications(Number(band.element.dataset.bandIndex));
           saveUndoState(band);
@@ -531,6 +954,7 @@
         gesture.changed = true;
         syncBandDebugState(band);
         renderBand(band);
+        schedulePersist();
       }
 
       function strokeHitsEraser(stroke, eraser) {
@@ -616,11 +1040,17 @@
         if (!band || !band.strokes.length || band.revision === band.lastCommittedRevision) return;
         band.lastCommittedRevision = band.revision;
         const committedAt = performance.now();
+        const committedWallTime = Date.now();
         console.log(`[line ${index + 1}] commit fired`, new Date().toISOString());
-        window.onLineCommit(index, committedAt);
+        schedulePersist();
+        window.onLineCommit(index, committedAt, committedWallTime);
       }
 
-      window.onLineCommit = async (index, committedAt = performance.now()) => {
+      window.onLineCommit = async (
+        index,
+        committedAt = performance.now(),
+        committedWallTime = Date.now()
+      ) => {
         const band = bands[index];
         if (!band) return;
         const version = ++band.transcriptionVersion;
@@ -640,11 +1070,23 @@
             return;
           }
           band.transcriptionPending = false;
+          if (band.selfCorrectionCandidate) {
+            if (latex !== band.selfCorrectionCandidate.from) {
+              band.selfCorrectionPending = {
+                from: band.selfCorrectionCandidate.from,
+                afterNudges: band.nudgeHistory.length
+              };
+            }
+            band.selfCorrectionCandidate = null;
+          }
           band.latex = latex;
           band.tutorRevision++;
           renderTranscript(band);
+          appendJourneyEvent('line_commit', index + 1, { latex }, committedWallTime);
           const elapsed = Math.round(performance.now() - committedAt);
           console.log(`[line ${index + 1}] transcript rendered`, new Date().toISOString(), `${elapsed}ms after commit`);
+          schedulePersist();
+          updateGraphFromWorkspace();
           verifyAffectedLines(index);
         } catch (error) {
           if (version !== band.transcriptionVersion) {
@@ -653,6 +1095,7 @@
           }
           band.transcriptionPending = false;
           console.warn(`[line ${index + 1}] transcription failed`, error);
+          schedulePersist();
           showTranscriptStatus(band, 'Couldn’t transcribe — tap to retry', 'error');
         }
       };
@@ -688,7 +1131,12 @@
             updateProblemDraftState();
             return;
           }
-          sessionStorage.setItem('pendingProblem', nextProblem);
+          clearPersistedWorksheet();
+          try {
+            sessionStorage.setItem('pendingProblem', nextProblem);
+          } catch (error) {
+            console.warn('[persistence] could not preserve the new problem across reload', error);
+          }
           window.location.reload();
           return;
         }
@@ -696,6 +1144,7 @@
         activeProblem = nextProblem;
         problemInput.value = activeProblem;
         updateProblemDraftState();
+        schedulePersist();
       }
 
       async function extractProblemFromImage(file) {
@@ -726,6 +1175,42 @@
           problemUploadButton.disabled = false;
           problemUploadButton.textContent = '📷';
           problemFileInput.value = '';
+        }
+      }
+
+      async function generateSimilarProblem() {
+        if (!worksheetIsSolved() || oneMoreButton.disabled) return;
+        const sourceProblem = activeProblem;
+        oneMoreButton.disabled = true;
+        oneMoreButton.textContent = 'Making another…';
+        try {
+          const response = await fetch('/api/generate-problem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ problem: sourceProblem })
+          });
+          if (!response.ok) throw new Error(`Problem generation failed (${response.status})`);
+          const result = await response.json();
+          if (typeof result.problem !== 'string' || !result.problem.trim()) {
+            throw new Error('No new problem was returned');
+          }
+          const nextProblem = result.problem.trim();
+          if (nextProblem.toLocaleLowerCase() === sourceProblem.trim().toLocaleLowerCase()) {
+            throw new Error('The generated problem was not new');
+          }
+          if (activeProblem !== sourceProblem || !worksheetIsSolved()) {
+            throw new Error('The worksheet changed while generating the problem');
+          }
+
+          problemInput.value = nextProblem;
+          updateProblemDraftState();
+          applyProblemDraft();
+        } catch (error) {
+          console.warn('[problem generation] failed', error);
+          window.alert('Couldn’t make another problem right now. Your work is still here.');
+        } finally {
+          oneMoreButton.disabled = false;
+          oneMoreButton.textContent = 'One more like this';
         }
       }
 
@@ -776,6 +1261,7 @@
           if (targetIndex === 0) target.setupReason = null;
           renderVerdict(target, null);
         }
+        setSolvedState(worksheetIsSolved());
       }
 
       function verifyAffectedLines(index) {
@@ -830,17 +1316,35 @@
             ? true
             : verdict.errorType === 'not_equivalent' ? false : null;
           renderVerdict(band, verdict);
+          if (band.verdict !== null) {
+            appendJourneyEvent('verdict', index + 1, {
+              verdict: band.verdict ? 'valid' : 'not_equivalent',
+              latex: band.latex,
+              setupReason: band.setupReason
+            });
+          }
+          if (band.verdict === true && band.selfCorrectionPending) {
+            appendJourneyEvent('self_correction', index + 1, {
+              from: band.selfCorrectionPending.from,
+              to: band.latex,
+              afterNudges: band.selfCorrectionPending.afterNudges
+            });
+            band.selfCorrectionPending = null;
+          }
+          schedulePersist();
           if (band.verdict === true) {
             fadeLineNudges(index);
           } else if (band.verdict === false) {
             requestLineNudge(index, version);
           }
+          maybeRecordSolved();
         } catch (error) {
           if (version !== band.verificationVersion) return;
           band.verificationPending = false;
           band.verdict = null;
           console.warn(`[line ${index + 1}] verification unavailable`, error);
           renderVerdict(band, null);
+          schedulePersist();
         }
       }
 
@@ -901,6 +1405,11 @@
             return;
           }
           targetBand.nudgeHistory.push(nudge);
+          appendJourneyEvent('nudge', targetIndex + 1, {
+            text: nudge,
+            level: Math.min(targetBand.nudgeHistory.length, 3),
+            historyLength: targetBand.nudgeHistory.length
+          });
           addNudgeCard(nudge, targetIndex);
         } catch (error) {
           console.warn(`[line ${index + 1}] nudge unavailable`, error);
@@ -943,6 +1452,7 @@
         if (lineIndex !== null) card.dataset.lineIndex = lineIndex;
         nudgeFeed.prepend(card);
         allNudges.push(nudge);
+        schedulePersist();
       }
 
       function hasDuplicateNudge(nudge, band) {
@@ -959,6 +1469,7 @@
       function fadeLineNudges(index) {
         nudgeFeed.querySelectorAll(`.nudge-card[data-line-index="${index}"]`)
           .forEach(card => card.classList.add('resolved'));
+        schedulePersist();
       }
 
       function renderVerdict(band, verdict) {
@@ -976,6 +1487,583 @@
         }
       }
 
+      function splitTopLevelEquation(latex) {
+        if (typeof latex !== 'string' || !latex.trim()) return null;
+        const source = latex.trim();
+        const stack = [];
+        const equalsIndexes = [];
+        const closingFor = { '{': '}', '[': ']', '(': ')' };
+        for (let index = 0; index < source.length; index++) {
+          const character = source[index];
+          if (character === '\\') {
+            index++;
+            while (index + 1 < source.length && /[A-Za-z]/.test(source[index + 1])) index++;
+            continue;
+          }
+          if (closingFor[character]) {
+            stack.push(closingFor[character]);
+          } else if (stack.length && character === stack[stack.length - 1]) {
+            stack.pop();
+          } else if (character === '=' && stack.length === 0) {
+            equalsIndexes.push(index);
+          }
+        }
+        if (stack.length || equalsIndexes.length !== 1) return null;
+        const equalsIndex = equalsIndexes[0];
+        const left = source.slice(0, equalsIndex).trim();
+        const right = source.slice(equalsIndex + 1).trim();
+        return left && right ? { left, right } : null;
+      }
+
+      function readLatexGroup(source, start) {
+        if (source[start] !== '{') return null;
+        let depth = 0;
+        for (let index = start; index < source.length; index++) {
+          if (source[index] === '{') depth++;
+          if (source[index] === '}') depth--;
+          if (depth === 0) return { value: source.slice(start + 1, index), end: index + 1 };
+        }
+        return null;
+      }
+
+      function expandLatexGroups(source) {
+        let result = source;
+        let match;
+        const fractionPattern = /\\(?:dfrac|tfrac|frac)/;
+        while ((match = fractionPattern.exec(result))) {
+          const numerator = readLatexGroup(result, match.index + match[0].length);
+          if (!numerator) throw new Error('Unsupported fraction');
+          const denominator = readLatexGroup(result, numerator.end);
+          if (!denominator) throw new Error('Unsupported fraction');
+          const replacement = `((${expandLatexGroups(numerator.value)})/(${expandLatexGroups(denominator.value)}))`;
+          result = result.slice(0, match.index) + replacement + result.slice(denominator.end);
+        }
+        const squareRootPattern = /\\sqrt/;
+        while ((match = squareRootPattern.exec(result))) {
+          const radicand = readLatexGroup(result, match.index + match[0].length);
+          if (!radicand) throw new Error('Unsupported square root');
+          const replacement = `Math.sqrt(${expandLatexGroups(radicand.value)})`;
+          result = result.slice(0, match.index) + replacement + result.slice(radicand.end);
+        }
+        return result;
+      }
+
+      function latexNumericFunction(latex) {
+        let expression = expandLatexGroups(latex)
+          .replace(/\\left|\\right/g, '')
+          .replace(/\\(?:cdot|times)/g, '*')
+          .replace(/\\pi/g, 'Math.PI')
+          .replace(/\\(?:sin|cos|tan|exp|ln)/g, match => {
+            const name = match.slice(1) === 'ln' ? 'log' : match.slice(1);
+            return `Math.${name}`;
+          })
+          .replace(/\\[,!;: ]/g, '')
+          .replace(/[{}]/g, character => character === '{' ? '(' : ')')
+          .replace(/\u2212/g, '-')
+          .replace(/\^/g, '**')
+          .replace(/\s+/g, '');
+
+        expression = expression
+          .replace(/(\d|x|\))(?=(x|\(|Math\.))/g, '$1*')
+          .replace(/(x|\))(?=\d)/g, '$1*')
+          .replace(/\)(?=\()/g, ')*');
+
+        const withoutKnownNames = expression
+          .replace(/Math\.(?:PI|sin|cos|tan|exp|log|sqrt)/g, '')
+          .replace(/x/g, '');
+        if (/[A-Za-z_$\[\]'"`;:=<>?!&|]/.test(withoutKnownNames) ||
+            !/^[0-9x+\-*/().A-Za-z]+$/.test(expression)) {
+          throw new Error('Unsupported LaTeX');
+        }
+
+        const evaluate = Function('x', `"use strict"; return (${expression});`);
+        return x => {
+          const value = Number(evaluate(x));
+          return Number.isFinite(value) ? value : NaN;
+        };
+      }
+
+      function findIntersection(leftFunction, rightFunction, preferredX = null) {
+        const difference = x => leftFunction(x) - rightFunction(x);
+        const identityProbes = [-7, -2, 0, 3, 9]
+          .map(difference)
+          .filter(Number.isFinite);
+        if (identityProbes.length >= 3 && identityProbes.every(value => Math.abs(value) < 1e-9)) return null;
+
+        const roots = [];
+        const rememberRoot = root => {
+          const left = leftFunction(root);
+          const right = rightFunction(root);
+          const residual = Math.abs(left - right);
+          if (!Number.isFinite(residual) || residual > 1e-5 * (1 + Math.abs(left) + Math.abs(right))) return;
+          if (!roots.some(existing => Math.abs(existing - root) < 1e-4)) roots.push(root);
+        };
+
+        for (const range of [10, 100, 1000]) {
+          const samples = 400;
+          let previousX = -range;
+          let previousValue = difference(previousX);
+          for (let step = 1; step <= samples; step++) {
+            const x = -range + (2 * range * step) / samples;
+            const value = difference(x);
+            if (Number.isFinite(value) && Math.abs(value) < 1e-9) rememberRoot(x);
+            if (Number.isFinite(previousValue) && Number.isFinite(value) && previousValue * value < 0) {
+              let low = previousX;
+              let high = x;
+              let lowValue = previousValue;
+              for (let iteration = 0; iteration < 60; iteration++) {
+                const middle = (low + high) / 2;
+                const middleValue = difference(middle);
+                if (!Number.isFinite(middleValue)) break;
+                if (lowValue * middleValue <= 0) {
+                  high = middle;
+                } else {
+                  low = middle;
+                  lowValue = middleValue;
+                }
+              }
+              rememberRoot((low + high) / 2);
+            }
+            previousX = x;
+            previousValue = value;
+          }
+          if (roots.length) break;
+        }
+
+        if (!roots.length) return null;
+        if (Number.isFinite(preferredX)) {
+          roots.sort((a, b) => Math.abs(a - preferredX) - Math.abs(b - preferredX));
+        } else {
+          roots.sort((a, b) => Math.abs(a) - Math.abs(b));
+        }
+        return roots[0];
+      }
+
+      function mapLatexVariables(latex, transform) {
+        let result = '';
+        for (let index = 0; index < latex.length; index++) {
+          const character = latex[index];
+          if (character === '\\') {
+            result += character;
+            if (index + 1 < latex.length && /[A-Za-z]/.test(latex[index + 1])) {
+              while (index + 1 < latex.length && /[A-Za-z]/.test(latex[index + 1])) {
+                result += latex[++index];
+              }
+            } else if (index + 1 < latex.length) {
+              result += latex[++index];
+            }
+          } else if (/[A-Za-z]/.test(character)) {
+            result += transform(character);
+          } else {
+            result += character;
+          }
+        }
+        return result;
+      }
+
+      function equationVariables(sides) {
+        const variables = new Set();
+        for (const side of [sides.left, sides.right]) {
+          mapLatexVariables(side, variable => {
+            variables.add(variable.toLocaleLowerCase());
+            return variable;
+          });
+        }
+        return [...variables];
+      }
+
+      function graphEquation(latex, preferredX = null) {
+        const sides = splitTopLevelEquation(latex);
+        if (!sides) return null;
+        const variables = equationVariables(sides);
+        if (variables.length !== 1) return null;
+        const unknown = variables[0];
+        const normalizedSides = {
+          left: mapLatexVariables(sides.left, variable =>
+            variable.toLocaleLowerCase() === unknown ? 'x' : variable),
+          right: mapLatexVariables(sides.right, variable =>
+            variable.toLocaleLowerCase() === unknown ? 'x' : variable)
+        };
+        try {
+          const leftFunction = latexNumericFunction(normalizedSides.left);
+          const rightFunction = latexNumericFunction(normalizedSides.right);
+          const x = findIntersection(leftFunction, rightFunction, preferredX);
+          if (!Number.isFinite(x)) return null;
+          const y = (leftFunction(x) + rightFunction(x)) / 2;
+          if (!Number.isFinite(y)) return null;
+          return { ...normalizedSides, unknown, leftFunction, rightFunction, x, y };
+        } catch (error) {
+          console.debug('[graph] equation not graphable', latex, error.message);
+          return null;
+        }
+      }
+
+      function latexIsNumericConstant(latex) {
+        try {
+          const evaluate = latexNumericFunction(latex);
+          const atZero = evaluate(0);
+          const atOne = evaluate(1);
+          return Number.isFinite(atZero) && Number.isFinite(atOne) &&
+            Math.abs(atZero - atOne) < 1e-9 * (1 + Math.abs(atZero));
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function isFinalAnswerLatex(latex) {
+        const sides = splitTopLevelEquation(latex);
+        if (!sides) return false;
+        const normalizeVariable = value => value.replace(/\s+/g, '');
+        const leftVariable = /^[A-Za-z]$/.test(normalizeVariable(sides.left));
+        const rightVariable = /^[A-Za-z]$/.test(normalizeVariable(sides.right));
+        return (leftVariable && latexIsNumericConstant(sides.right)) ||
+          (rightVariable && latexIsNumericConstant(sides.left));
+      }
+
+      function committedBands() {
+        return bands
+          .map((band, index) => ({ band, index }))
+          .filter(({ band }) => band.lastCommittedRevision > 0);
+      }
+
+      function worksheetIsSolved() {
+        const committed = committedBands();
+        if (!committed.length || committed.some(({ band }) => !band.latex || band.verdict !== true)) return false;
+        return isFinalAnswerLatex(committed[committed.length - 1].band.latex);
+      }
+
+      function setSolvedState(isSolved) {
+        solvedState = isSolved;
+        oneMoreButton.hidden = !isSolved;
+      }
+
+      function maybeRecordSolved() {
+        const isSolved = worksheetIsSolved();
+        if (isSolved && !solvedState) {
+          const committed = committedBands();
+          const finalEntry = committed[committed.length - 1];
+          appendJourneyEvent('problem_solved', finalEntry.index + 1, {
+            latex: finalEntry.band.latex,
+            steps: committed.length
+          });
+        }
+        setSolvedState(isSolved);
+      }
+
+      function formatElapsed(milliseconds) {
+        if (!Number.isFinite(milliseconds) || milliseconds < 0) return 'Not available';
+        const totalSeconds = Math.max(1, Math.round(milliseconds / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        if (!minutes) return `${seconds}s`;
+        return `${minutes}m ${seconds}s`;
+      }
+
+      function plural(count, singular, pluralForm = `${singular}s`) {
+        return count === 1 ? singular : pluralForm;
+      }
+
+      function receiptModel() {
+        const committed = committedBands();
+        const invalidEvents = eventLog.filter(event =>
+          event.type === 'verdict' && event.detail?.verdict === 'not_equivalent'
+        );
+        const mistakesByLine = new Map();
+        invalidEvents.forEach(event => {
+          if (!mistakesByLine.has(event.line)) mistakesByLine.set(event.line, event.detail?.latex || '');
+        });
+        const nudgeEvents = eventLog.filter(event => event.type === 'nudge');
+        const selfCorrections = eventLog.filter(event => event.type === 'self_correction');
+        const firstInk = eventLog.find(event => event.type === 'ink_started');
+        const solvedEvent = eventLog.find(event => event.type === 'problem_solved');
+        return {
+          committed,
+          solved: worksheetIsSolved(),
+          mistakesByLine,
+          nudgeEvents,
+          selfCorrections,
+          maxNudgeLevel: nudgeEvents.reduce((maximum, event) =>
+            Math.max(maximum, Number(event.detail?.level) || 0), 0),
+          elapsed: firstInk && solvedEvent ? solvedEvent.t - firstInk.t : null
+        };
+      }
+
+      function receiptMetric(label, value, detail, hero = false) {
+        const metric = document.createElement('section');
+        metric.className = `receipt-metric${hero ? ' hero' : ''}`;
+        const labelElement = document.createElement('div');
+        labelElement.className = 'receipt-metric-label';
+        labelElement.textContent = label;
+        const valueElement = document.createElement('div');
+        valueElement.className = 'receipt-metric-value';
+        valueElement.textContent = value;
+        const detailElement = document.createElement('div');
+        detailElement.className = 'receipt-metric-detail';
+        detailElement.textContent = detail;
+        metric.append(labelElement, valueElement, detailElement);
+        return metric;
+      }
+
+      function renderReceipt() {
+        const model = receiptModel();
+        receiptContent.replaceChildren();
+
+        const problem = document.createElement('p');
+        problem.className = 'receipt-problem';
+        problem.textContent = activeProblem || 'No problem statement provided.';
+        const status = document.createElement('p');
+        status.className = 'receipt-status';
+        status.textContent = model.solved ? 'Solved · all recorded steps valid' : 'Work in progress';
+
+        const mistakeLines = [...model.mistakesByLine.keys()].filter(Number.isInteger);
+        const mistakePhrase = mistakeLines.length
+          ? `${mistakeLines.length} ${plural(mistakeLines.length, 'line')} flagged (${mistakeLines.map(line => `line ${line}`).join(', ')})`
+          : 'no lines flagged';
+        const nudgePhrase = model.nudgeEvents.length
+          ? `${model.nudgeEvents.length} ${plural(model.nudgeEvents.length, 'nudge')}`
+          : 'no nudges';
+        const correctionPhrase = model.selfCorrections.length
+          ? `${model.selfCorrections.length} self-${plural(model.selfCorrections.length, 'correction')}`
+          : 'no self-corrections recorded';
+        const evidence = document.createElement('p');
+        evidence.className = 'receipt-evidence';
+        evidence.textContent = model.selfCorrections.length
+          ? `${model.solved ? 'Solved' : 'Worked'} in ${model.committed.length} ${plural(model.committed.length, 'step')}; ${mistakePhrase}; ${correctionPhrase} after ${nudgePhrase}.`
+          : `${model.solved ? 'Solved' : 'Worked'} in ${model.committed.length} ${plural(model.committed.length, 'step')}; ${mistakePhrase}; ${nudgePhrase}; no self-corrections recorded.`;
+
+        const mistakeDetail = mistakeLines.length
+          ? mistakeLines.map(line => {
+              const latex = model.mistakesByLine.get(line);
+              return `Line ${line}${latex ? `: ${latex}` : ''}`;
+            }).join(' · ')
+          : 'No not-equivalent verdicts recorded.';
+        const nudgeDetail = model.maxNudgeLevel
+          ? `Deepest support: level ${model.maxNudgeLevel} (${model.maxNudgeLevel === 1 ? 'location' : model.maxNudgeLevel === 2 ? 'operation' : 'concept'}).`
+          : 'No tutor intervention recorded.';
+        const correctionNudgeCounts = model.selfCorrections
+          .map(event => Number(event.detail?.afterNudges))
+          .filter(Number.isFinite);
+        const leastSupport = correctionNudgeCounts.length ? Math.min(...correctionNudgeCounts) : null;
+        const correctionDetail = model.selfCorrections.length
+          ? `The student changed ${plural(model.selfCorrections.length, 'an amber line', 'amber lines')} and restored validity${leastSupport === null ? '' : ` after ${leastSupport} ${plural(leastSupport, 'nudge')}`}.`
+          : 'No amber-to-green correction recorded yet.';
+        const metrics = document.createElement('div');
+        metrics.className = 'receipt-metrics';
+        metrics.append(
+          receiptMetric('Steps taken', String(model.committed.length), `Time from first ink: ${model.solved ? formatElapsed(model.elapsed) : 'not solved yet'}`),
+          receiptMetric('Mistakes identified', String(mistakeLines.length), mistakeDetail),
+          receiptMetric('Nudges needed', String(model.nudgeEvents.length), nudgeDetail),
+          receiptMetric('Self-corrections', String(model.selfCorrections.length), correctionDetail, true)
+        );
+
+        const derivationTitle = document.createElement('h2');
+        derivationTitle.className = 'receipt-section-title';
+        derivationTitle.textContent = 'Final derivation and attached support';
+        receiptContent.append(problem, status, evidence, metrics, derivationTitle);
+
+        if (!model.committed.length) {
+          const empty = document.createElement('div');
+          empty.className = 'receipt-empty';
+          empty.textContent = 'No committed working yet.';
+          receiptContent.append(empty);
+          return;
+        }
+
+        const derivation = document.createElement('div');
+        derivation.className = 'receipt-derivation';
+        const correctedLines = new Set(model.selfCorrections.map(event => event.line));
+        model.committed.forEach(({ band, index }) => {
+          const row = document.createElement('section');
+          row.className = 'receipt-line';
+          const lineNumber = document.createElement('div');
+          lineNumber.className = 'receipt-line-number';
+          lineNumber.textContent = `Line ${index + 1}`;
+          const math = document.createElement('div');
+          math.className = 'receipt-line-math';
+          katex.render(band.latex, math, { throwOnError: false, displayMode: false });
+          const verdict = document.createElement('div');
+          verdict.className = 'receipt-line-verdict';
+          verdict.textContent = band.verdict === true
+            ? `Valid${correctedLines.has(index + 1) ? ' · self-corrected' : ''}`
+            : band.verdict === false ? 'Flagged' : 'Not verified';
+          row.append(lineNumber, math, verdict);
+          if (band.nudgeHistory.length) {
+            const nudges = document.createElement('div');
+            nudges.className = 'receipt-line-nudges';
+            nudges.textContent = band.nudgeHistory
+              .map((nudge, nudgeIndex) => `Nudge ${nudgeIndex + 1} · level ${Math.min(nudgeIndex + 1, 3)}: ${nudge}`)
+              .join('   ');
+            row.append(nudges);
+          }
+          derivation.append(row);
+        });
+        receiptContent.append(derivation);
+      }
+
+      function openReceipt() {
+        renderReceipt();
+        receiptView.hidden = false;
+        receiptView.scrollTop = 0;
+      }
+
+      function closeReceipt() {
+        receiptView.hidden = true;
+      }
+
+      function updateGraphFromWorkspace() {
+        let currentIndex = -1;
+        for (let index = bands.length - 1; index >= 0; index--) {
+          if (bands[index].lastCommittedRevision > 0) {
+            currentIndex = index;
+            break;
+          }
+        }
+        if (currentIndex < 0) return;
+
+        const preferredX = lastGoodGraph?.current?.x ?? null;
+        const current = graphEquation(bands[currentIndex].latex, preferredX);
+        if (!current) return;
+        const previousBand = bands[currentIndex - 1];
+        const previous = previousBand?.lastCommittedRevision > 0
+          ? graphEquation(previousBand.latex, current.x)
+          : null;
+        lastGoodGraph = { current, previous, currentIndex };
+        if (desmosCalculator) plotGraphState(lastGoodGraph);
+      }
+
+      function plotGraphState(state) {
+        try {
+          const blue = '#2d70b3';
+          const amber = '#c78632';
+          const desmosNumber = value => String(Number(value.toPrecision(12)));
+          desmosCalculator.setExpressions([
+            { id: 'current-left', latex: `y=${state.current.left}`, color: blue, lineWidth: 3 },
+            { id: 'current-right', latex: `y=${state.current.right}`, color: amber, lineWidth: 3 },
+            {
+              id: 'current-intersection',
+              latex: `(${desmosNumber(state.current.x)},${desmosNumber(state.current.y)})`,
+              color: '#171816',
+              pointSize: 13,
+              pointStyle: Desmos.Styles.POINT,
+              showLabel: true,
+              label: 'current crossing'
+            }
+          ]);
+
+          if (state.previous) {
+            desmosCalculator.setExpressions([
+              {
+                id: 'previous-left',
+                latex: `y=${state.previous.left}`,
+                color: blue,
+                lineStyle: Desmos.Styles.DASHED,
+                lineOpacity: 0.3,
+                lineWidth: 2
+              },
+              {
+                id: 'previous-right',
+                latex: `y=${state.previous.right}`,
+                color: amber,
+                lineStyle: Desmos.Styles.DASHED,
+                lineOpacity: 0.3,
+                lineWidth: 2
+              },
+              {
+                id: 'previous-intersection',
+                latex: `(${desmosNumber(state.previous.x)},${desmosNumber(state.previous.y)})`,
+                color: '#777872',
+                pointSize: 8,
+                pointOpacity: 0.45,
+                showLabel: true,
+                label: 'previous crossing'
+              }
+            ]);
+          } else {
+            desmosCalculator.removeExpressions([
+              { id: 'previous-left' },
+              { id: 'previous-right' },
+              { id: 'previous-intersection' }
+            ]);
+          }
+
+          const xValues = [state.current.x, state.previous?.x].filter(Number.isFinite);
+          const xDistance = xValues.length > 1 ? Math.abs(xValues[0] - xValues[1]) : 0;
+          const xPadding = Math.max(2, xDistance * 0.25);
+          const left = Math.min(...xValues) - xPadding;
+          const right = Math.max(...xValues) + xPadding;
+          const graphLines = [state.current, state.previous].filter(Boolean);
+          const yValues = graphLines.flatMap(line => [
+            line.y,
+            line.leftFunction(left),
+            line.leftFunction(right),
+            line.rightFunction(left),
+            line.rightFunction(right)
+          ]).filter(value => Number.isFinite(value) && Math.abs(value) < 1e7);
+          const centerY = state.current.y;
+          const yPadding = Math.max(5, ...yValues.map(value => Math.abs(value - centerY))) * 1.15;
+          desmosCalculator.setMathBounds({
+            left,
+            right,
+            bottom: centerY - yPadding,
+            top: centerY + yPadding
+          });
+          graphStatus.hidden = true;
+        } catch (error) {
+          console.warn('[graph] update failed; keeping the workspace available', error);
+          showGraphUnavailable();
+        }
+      }
+
+      function showGraphUnavailable() {
+        graphStatus.hidden = false;
+        graphStatus.textContent = 'Graph unavailable. Your worksheet still works normally.';
+      }
+
+      function loadDesmos() {
+        if (desmosLoadPromise) return desmosLoadPromise;
+        desmosLoadPromise = new Promise((resolve, reject) => {
+          if (window.Desmos?.GraphingCalculator) return resolve(window.Desmos);
+          const script = document.createElement('script');
+          const apiKey = window.APP_CONFIG?.desmosApiKey || 'dcb31709b452b1cf9dc26972add0fda6';
+          script.src = `https://www.desmos.com/api/v1.11/calculator.js?apiKey=${encodeURIComponent(apiKey)}`;
+          script.async = true;
+          script.onload = () => window.Desmos?.GraphingCalculator
+            ? resolve(window.Desmos)
+            : reject(new Error('Desmos did not initialize'));
+          script.onerror = () => reject(new Error('Could not load Desmos'));
+          document.head.append(script);
+        }).then(() => {
+          desmosCalculator = Desmos.GraphingCalculator(graphHost, {
+            expressions: false,
+            keypad: false,
+            settingsMenu: false,
+            expressionsTopbar: false,
+            pointsOfInterest: true
+          });
+          if (lastGoodGraph) plotGraphState(lastGoodGraph);
+          return desmosCalculator;
+        }).catch(error => {
+          console.warn('[graph] initialization failed', error);
+          showGraphUnavailable();
+          return null;
+        });
+        return desmosLoadPromise;
+      }
+
+      function showSidePanel(panelName) {
+        panelTabs.forEach(tab => {
+          const selected = tab.dataset.panel === panelName;
+          tab.classList.toggle('active', selected);
+          tab.setAttribute('aria-selected', String(selected));
+        });
+        panelViews.forEach(view => {
+          view.hidden = view.dataset.panelView !== panelName;
+        });
+        if (panelName === 'graph') {
+          loadDesmos().then(calculator => calculator?.resize());
+        }
+      }
+
       function editTranscript(index) {
         const band = bands[index];
         if (!band || band.transcript.querySelector('input')) return;
@@ -985,6 +2073,7 @@
         }
 
         // A manual edit is authoritative over any request already in flight.
+        const wasInvalidAtEditStart = band.verdict === false;
         band.transcriptionVersion++;
         band.transcriptionPending = false;
         invalidateAffectedVerifications(index);
@@ -1002,8 +2091,18 @@
         const finish = () => {
           if (!input.isConnected) return;
           band.latex = input.value.trim();
-          if (band.latex !== originalLatex) band.tutorRevision++;
+          if (band.latex !== originalLatex) {
+            band.tutorRevision++;
+            if (wasInvalidAtEditStart) {
+              band.selfCorrectionPending = {
+                from: originalLatex,
+                afterNudges: band.nudgeHistory.length
+              };
+            }
+          }
           renderTranscript(band);
+          schedulePersist();
+          updateGraphFromWorkspace();
           verifyAffectedLines(index);
         };
         input.addEventListener('blur', finish);
@@ -1062,12 +2161,16 @@
         const band = bands[activeBandIndex];
         if (!band || !band.history.length) return;
         clearTimeout(commitTimer);
+        if (band.verdict === false) {
+          band.selfCorrectionCandidate = { from: band.latex };
+        }
         band.strokes = band.history.pop();
         band.transcriptionVersion++;
         invalidateAffectedVerifications(activeBandIndex);
         band.revision++;
         syncBandDebugState(band);
         renderBand(band);
+        schedulePersist();
         lastPenUpBand = activeBandIndex;
         scheduleCommit(activeBandIndex);
       });
@@ -1083,6 +2186,15 @@
       problemFileInput.addEventListener('change', () => {
         const [file] = problemFileInput.files;
         if (file) extractProblemFromImage(file);
+      });
+      panelTabs.forEach(tab => {
+        tab.addEventListener('click', () => showSidePanel(tab.dataset.panel));
+      });
+      oneMoreButton.addEventListener('click', generateSimilarProblem);
+      receiptButton.addEventListener('click', openReceipt);
+      receiptCloseButton.addEventListener('click', closeReceipt);
+      window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !receiptView.hidden) closeReceipt();
       });
 
       askForm.addEventListener('submit', async event => {
@@ -1103,7 +2215,15 @@
         }
       });
 
-      for (let i = 0; i < 8; i++) createBand();
+      if (savedWorksheet) {
+        restoreWorksheet(savedWorksheet);
+        console.log(`[persistence] restored ${bands.length} bands without API calls`);
+      } else {
+        for (let i = 0; i < 8; i++) createBand();
+        if (restoredProblem !== null) schedulePersist();
+      }
+      updateGraphFromWorkspace();
+      setSolvedState(worksheetIsSolved());
 
       resizeObserver = new ResizeObserver(entries => {
         for (const entry of entries) {
@@ -1114,6 +2234,7 @@
       bands.forEach(band => resizeObserver.observe(band.canvas));
 
       window.addEventListener('resize', () => bands.forEach(sizeCanvas));
+      window.addEventListener('pagehide', persistWorksheet);
     })();
   </script>
 </body>
