@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Ruled maths workspace</title>
+  <style>
+    :root {
+      --paper: #fbfaf6;
+      --desk: #efeee9;
+      --ink: #171816;
+      --rule: #d9d8d1;
+      --muted: #777872;
+      --band-height: 90px;
+      --transcript-height: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-height: 100%; background: var(--desk); color: var(--ink); }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overscroll-behavior-y: contain;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 22px;
+      background: color-mix(in srgb, var(--paper) 94%, transparent);
+      border-bottom: 1px solid #deddd7;
+      backdrop-filter: blur(10px);
+    }
+
+    .title { font-size: 14px; font-weight: 620; letter-spacing: .01em; }
+    .hint { margin-left: 10px; color: var(--muted); font-size: 12px; font-weight: 450; }
+    .tools { display: flex; gap: 4px; }
+
+    button {
+      height: 34px;
+      padding: 0 11px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: #4b4c48;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #ecebe5; }
+    button.active { background: var(--ink); color: var(--paper); }
+    button:focus-visible { outline: 2px solid #6f8caa; outline-offset: 2px; }
+
+    #worksheet {
+      width: min(100%, 1180px);
+      min-height: calc(100vh - 58px);
+      margin: 0 auto;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px rgba(34, 34, 31, .04), 0 8px 28px rgba(30, 30, 26, .07);
+    }
+
+    .band { position: relative; border-bottom: 1px solid var(--rule); }
+
+    .ink-canvas {
+      display: block;
+      width: 100%;
+      height: var(--band-height);
+      background: transparent;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .eraser-mode .ink-canvas { cursor: cell; }
+
+    .transcript-strip {
+      height: var(--transcript-height);
+      border-top: 1px solid rgba(217, 216, 209, .42);
+      pointer-events: none;
+    }
+
+    @media (max-width: 560px) {
+      header { padding-inline: 12px 8px; }
+      .hint { display: none; }
+      button { padding-inline: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div><span class="title">Maths workspace</span><span class="hint">One step per line</span></div>
+    <nav class="tools" aria-label="Ink tools">
+      <button id="penButton" class="active" type="button" aria-pressed="true">Pen</button>
+      <button id="eraserButton" type="button" aria-pressed="false">Eraser</button>
+      <button id="undoButton" type="button" title="Undo in the active line">Undo</button>
+    </nav>
+  </header>
+
+  <main id="worksheet" aria-label="Ruled handwriting canvas"></main>
+
+  <script>
+    (() => {
+      const BAND_HEIGHT = 90;
+      const EXPORT_SCALE = 2;
+      const EXPORT_PADDING = 12;
+      const BASE_WIDTH = 3.15;
+      const ERASER_RADIUS = 12;
+      const worksheet = document.querySelector('#worksheet');
+      const penButton = document.querySelector('#penButton');
+      const eraserButton = document.querySelector('#eraserButton');
+      const undoButton = document.querySelector('#undoButton');
+
+      // Public data model: every point is local to its own band, in CSS pixels.
+      const bands = [];
+      window.bands = bands;
+
+      let tool = 'pen';
+      let gesture = null;
+      let activeBandIndex = 0;
+      let lastPenUpBand = null;
+      let commitTimer = null;
+      let resizeObserver = null;
+
+      function pressureWidth(pressure) {
+        const p = Number.isFinite(pressure) && pressure > 0 ? pressure : 0.5;
+        return BASE_WIDTH * (0.78 + Math.min(1, p) * 0.44);
+      }
+
+      function createBand() {
+        const index = bands.length;
+        const element = document.createElement('section');
+        element.className = 'band';
+        element.dataset.bandIndex = index;
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'ink-canvas';
+        canvas.setAttribute('aria-label', `Handwriting line ${index + 1}`);
+        const transcript = document.createElement('div');
+        transcript.className = 'transcript-strip';
+        transcript.setAttribute('aria-hidden', 'true');
+        element.append(canvas, transcript);
+        worksheet.append(element);
+
+        const band = {
+          strokes: [],
+          history: [],
+          revision: 0,
+          lastCommittedRevision: 0,
+          element,
+          canvas
+        };
+        bands.push(band);
+        sizeCanvas(band);
+        if (resizeObserver) resizeObserver.observe(canvas);
+
+        canvas.addEventListener('pointerdown', event => pointerDown(event, index));
+        canvas.addEventListener('pointermove', event => pointerMove(event, index));
+        canvas.addEventListener('pointerup', event => pointerUp(event, index));
+        canvas.addEventListener('pointercancel', event => pointerUp(event, index));
+        return band;
+      }
+
+      function sizeCanvas(band) {
+        const width = Math.max(1, Math.round(band.canvas.getBoundingClientRect().width));
+        // The visible canvas intentionally uses a 1x backing store. Export uses 2x.
+        if (band.canvas.width !== width || band.canvas.height !== BAND_HEIGHT) {
+          band.canvas.width = width;
+          band.canvas.height = BAND_HEIGHT;
+          renderBand(band);
+        }
+      }
+
+      function cloneStrokes(strokes) {
+        return strokes.map(stroke => stroke.map(point => ({ ...point })));
+      }
+
+      function saveUndoState(band) {
+        band.history.push(cloneStrokes(band.strokes));
+        if (band.history.length > 50) band.history.shift();
+      }
+
+      function eventPoints(event, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const coalesced = event.getCoalescedEvents ? event.getCoalescedEvents() : [];
+        const events = coalesced.length ? coalesced : [event];
+        return events.map(e => ({
+          x: Math.max(0, Math.min(rect.width, e.clientX - rect.left)),
+          y: Math.max(0, Math.min(BAND_HEIGHT, e.clientY - rect.top)),
+          pressure: e.pressure > 0 ? e.pressure : 0.5,
+          t: e.timeStamp
+        }));
+      }
+
+      function beginBandInteraction(index) {
+        activeBandIndex = index;
+        clearTimeout(commitTimer);
+        if (lastPenUpBand !== null && lastPenUpBand !== index) {
+          commitBand(lastPenUpBand);
+        }
+      }
+
+      function pointerDown(event, index) {
+        if (gesture || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        event.preventDefault();
+        beginBandInteraction(index);
+        const band = bands[index];
+        band.canvas.setPointerCapture(event.pointerId);
+
+        if (tool === 'pen') {
+          saveUndoState(band);
+          const stroke = eventPoints(event, band.canvas);
+          band.strokes.push(stroke);
+          gesture = { pointerId: event.pointerId, bandIndex: index, tool, changed: true };
+          renderBand(band);
+        } else {
+          gesture = { pointerId: event.pointerId, bandIndex: index, tool, changed: false, undoSaved: false };
+          eraseAtPoints(band, eventPoints(event, band.canvas));
+        }
+      }
+
+      function pointerMove(event, index) {
+        if (!gesture || gesture.pointerId !== event.pointerId || gesture.bandIndex !== index) return;
+        event.preventDefault();
+        const band = bands[index];
+        const points = eventPoints(event, band.canvas);
+        if (gesture.tool === 'pen') {
+          band.strokes[band.strokes.length - 1].push(...points);
+          renderBand(band);
+        } else {
+          eraseAtPoints(band, points);
+        }
+      }
+
+      function pointerUp(event, index) {
+        if (!gesture || gesture.pointerId !== event.pointerId || gesture.bandIndex !== index) return;
+        event.preventDefault();
+        const band = bands[index];
+        if (gesture.tool === 'pen' && event.type === 'pointerup') {
+          band.strokes[band.strokes.length - 1].push(...eventPoints(event, band.canvas));
+        }
+
+        if (gesture.changed) {
+          band.revision++;
+          syncBandDebugState(band);
+          if (index === bands.length - 1 && band.strokes.length) createBand();
+          renderBand(band);
+        }
+
+        lastPenUpBand = index;
+        gesture = null;
+        scheduleCommit(index);
+      }
+
+      function eraseAtPoints(band, points) {
+        const hitIndexes = new Set();
+        for (let s = 0; s < band.strokes.length; s++) {
+          const stroke = band.strokes[s];
+          if (points.some(eraser => strokeHitsEraser(stroke, eraser))) hitIndexes.add(s);
+        }
+        if (!hitIndexes.size) return;
+        if (!gesture.undoSaved) {
+          saveUndoState(band);
+          gesture.undoSaved = true;
+        }
+        band.strokes = band.strokes.filter((_, index) => !hitIndexes.has(index));
+        gesture.changed = true;
+        syncBandDebugState(band);
+        renderBand(band);
+      }
+
+      function strokeHitsEraser(stroke, eraser) {
+        if (stroke.length === 1) {
+          return Math.hypot(stroke[0].x - eraser.x, stroke[0].y - eraser.y) <= ERASER_RADIUS;
+        }
+        for (let i = 1; i < stroke.length; i++) {
+          const a = stroke[i - 1];
+          const b = stroke[i];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const lengthSquared = dx * dx + dy * dy;
+          const amount = lengthSquared
+            ? Math.max(0, Math.min(1, ((eraser.x - a.x) * dx + (eraser.y - a.y) * dy) / lengthSquared))
+            : 0;
+          const nearestX = a.x + amount * dx;
+          const nearestY = a.y + amount * dy;
+          if (Math.hypot(nearestX - eraser.x, nearestY - eraser.y) <= ERASER_RADIUS) return true;
+        }
+        return false;
+      }
+
+      function syncBandDebugState(band) {
+        band.element.dataset.strokeCount = band.strokes.length;
+        band.element.dataset.revision = band.revision;
+      }
+
+      function drawStroke(ctx, stroke, scale = 1, offsetX = 0, offsetY = 0) {
+        if (!stroke.length) return;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#171816';
+
+        if (stroke.length === 1) {
+          const p = stroke[0];
+          ctx.beginPath();
+          ctx.arc((p.x - offsetX) * scale, (p.y - offsetY) * scale,
+            pressureWidth(p.pressure) * scale / 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#171816';
+          ctx.fill();
+          return;
+        }
+
+        let previousMid = stroke[0];
+        for (let i = 1; i < stroke.length; i++) {
+          const current = stroke[i];
+          const mid = { x: (stroke[i - 1].x + current.x) / 2, y: (stroke[i - 1].y + current.y) / 2 };
+          ctx.beginPath();
+          ctx.moveTo((previousMid.x - offsetX) * scale, (previousMid.y - offsetY) * scale);
+          ctx.quadraticCurveTo(
+            (stroke[i - 1].x - offsetX) * scale,
+            (stroke[i - 1].y - offsetY) * scale,
+            (mid.x - offsetX) * scale,
+            (mid.y - offsetY) * scale
+          );
+          ctx.lineWidth = pressureWidth((stroke[i - 1].pressure + current.pressure) / 2) * scale;
+          ctx.stroke();
+          previousMid = mid;
+        }
+
+        const last = stroke[stroke.length - 1];
+        ctx.beginPath();
+        ctx.moveTo((previousMid.x - offsetX) * scale, (previousMid.y - offsetY) * scale);
+        ctx.lineTo((last.x - offsetX) * scale, (last.y - offsetY) * scale);
+        ctx.lineWidth = pressureWidth(last.pressure) * scale;
+        ctx.stroke();
+      }
+
+      function renderBand(band) {
+        const ctx = band.canvas.getContext('2d');
+        ctx.clearRect(0, 0, band.canvas.width, band.canvas.height);
+        band.strokes.forEach(stroke => drawStroke(ctx, stroke));
+      }
+
+      function scheduleCommit(index) {
+        clearTimeout(commitTimer);
+        if (!bands[index].strokes.length) return;
+        commitTimer = setTimeout(() => commitBand(index), 2000);
+      }
+
+      function commitBand(index) {
+        const band = bands[index];
+        if (!band || !band.strokes.length || band.revision === band.lastCommittedRevision) return;
+        band.lastCommittedRevision = band.revision;
+        window.onLineCommit(index);
+      }
+
+      // Replace this function later to connect transcription. It logs by default for testing.
+      window.onLineCommit = index => console.log('[line commit]', JSON.stringify({
+        bandIndex: index,
+        strokeCount: bands[index].strokes.length,
+        pointCount: bands[index].strokes.reduce((sum, stroke) => sum + stroke.length, 0),
+        revision: bands[index].revision
+      }));
+
+      // Returns Promise<Blob>. The PNG is tightly cropped, padded, white, and rendered at 2x.
+      window.exportBand = async function exportBand(index) {
+        const band = bands[index];
+        if (!band) throw new RangeError(`Band ${index} does not exist`);
+
+        const points = band.strokes.flat();
+        let left = 0, top = 0, right = band.canvas.width, bottom = BAND_HEIGHT;
+        if (points.length) {
+          const halfWidth = BASE_WIDTH;
+          left = Math.min(...points.map(p => p.x)) - halfWidth - EXPORT_PADDING;
+          top = Math.min(...points.map(p => p.y)) - halfWidth - EXPORT_PADDING;
+          right = Math.max(...points.map(p => p.x)) + halfWidth + EXPORT_PADDING;
+          bottom = Math.max(...points.map(p => p.y)) + halfWidth + EXPORT_PADDING;
+        }
+
+        const width = Math.max(1, Math.ceil(right - left));
+        const height = Math.max(1, Math.ceil(bottom - top));
+        const canvas = document.createElement('canvas');
+        canvas.width = width * EXPORT_SCALE;
+        canvas.height = height * EXPORT_SCALE;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        band.strokes.forEach(stroke => drawStroke(ctx, stroke, EXPORT_SCALE, left, top));
+
+        return new Promise((resolve, reject) => canvas.toBlob(
+          blob => blob ? resolve(blob) : reject(new Error('PNG export failed')),
+          'image/png'
+        ));
+      };
+
+      function setTool(nextTool) {
+        tool = nextTool;
+        worksheet.classList.toggle('eraser-mode', tool === 'eraser');
+        penButton.classList.toggle('active', tool === 'pen');
+        eraserButton.classList.toggle('active', tool === 'eraser');
+        penButton.setAttribute('aria-pressed', String(tool === 'pen'));
+        eraserButton.setAttribute('aria-pressed', String(tool === 'eraser'));
+      }
+
+      penButton.addEventListener('click', () => setTool('pen'));
+      eraserButton.addEventListener('click', () => setTool('eraser'));
+      undoButton.addEventListener('click', () => {
+        const band = bands[activeBandIndex];
+        if (!band || !band.history.length) return;
+        clearTimeout(commitTimer);
+        band.strokes = band.history.pop();
+        band.revision++;
+        syncBandDebugState(band);
+        renderBand(band);
+        lastPenUpBand = activeBandIndex;
+        scheduleCommit(activeBandIndex);
+      });
+
+      for (let i = 0; i < 8; i++) createBand();
+
+      resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const band = bands.find(candidate => candidate.canvas === entry.target);
+          if (band) sizeCanvas(band);
+        }
+      });
+      bands.forEach(band => resizeObserver.observe(band.canvas));
+
+      window.addEventListener('resize', () => bands.forEach(sizeCanvas));
+    })();
+  </script>
+</body>
+</html>
