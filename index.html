@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>Ruled maths workspace</title>
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <style>
     :root {
       --paper: #fbfaf6;
@@ -11,42 +12,83 @@
       --ink: #171816;
       --rule: #d9d8d1;
       --muted: #777872;
+      --accent: #9a7438;
       --band-height: 90px;
       --transcript-height: 24px;
     }
 
     * { box-sizing: border-box; }
 
-    html, body { margin: 0; min-height: 100%; background: var(--desk); color: var(--ink); }
+    html, body { margin: 0; height: 100%; background: var(--desk); color: var(--ink); }
 
     body {
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      overscroll-behavior-y: contain;
+      overflow: hidden;
     }
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      height: 58px;
+    /* ================================================================
+       PLACEHOLDER LAYOUT SHELL — safe to replace without touching ink
+       ================================================================ */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 65fr 35fr;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .workspace-pane {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+    }
+
+    .canvas-header {
+      flex: 0 0 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 18px 0 22px;
-      background: color-mix(in srgb, var(--paper) 94%, transparent);
-      border-bottom: 1px solid #deddd7;
-      backdrop-filter: blur(10px);
+      background: var(--paper);
+      border-bottom: 1px solid var(--rule);
     }
 
-    .title { font-size: 14px; font-weight: 620; letter-spacing: .01em; }
-    .hint { margin-left: 10px; color: var(--muted); font-size: 12px; font-weight: 450; }
+    .problem-editor {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-right: 18px;
+    }
+
+    .problem-input {
+      min-width: 0;
+      flex: 1;
+      height: 36px;
+      padding: 0 8px;
+      border: 1px solid transparent;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 580;
+    }
+
+    .problem-input:hover, .problem-input:focus { border-color: var(--rule); background: #f7f6f1; }
+    .problem-input::placeholder { color: #92938d; font-weight: 450; }
+    .problem-apply { border-color: var(--rule); white-space: nowrap; }
+    .problem-upload { width: 34px; padding: 0; font-size: 16px; }
     .tools { display: flex; gap: 4px; }
 
     button {
       height: 34px;
       padding: 0 11px;
       border: 1px solid transparent;
-      border-radius: 8px;
+      border-radius: 2px;
       background: transparent;
       color: #4b4c48;
       font: inherit;
@@ -56,14 +98,110 @@
 
     button:hover { background: #ecebe5; }
     button.active { background: var(--ink); color: var(--paper); }
+    button:disabled { cursor: default; opacity: .48; }
     button:focus-visible { outline: 2px solid #6f8caa; outline-offset: 2px; }
 
-    #worksheet {
-      width: min(100%, 1180px);
-      min-height: calc(100vh - 58px);
-      margin: 0 auto;
+    .canvas-scroll {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .tutor-panel {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 26px 20px;
+      border-left: 1px solid #cccbc4;
+      background: #f5f4ef;
+    }
+
+    .tutor-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 28px;
+    }
+
+    .duck-avatar {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid #cfcec7;
+      border-radius: 50%;
       background: var(--paper);
-      box-shadow: 0 0 0 1px rgba(34, 34, 31, .04), 0 8px 28px rgba(30, 30, 26, .07);
+      font-size: 30px;
+    }
+
+    .tutor-name-row { display: flex; align-items: center; gap: 8px; }
+    .tutor-name { font-size: 14px; font-weight: 600; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #999a94; }
+    .status-dot.watching { background: #64806a; }
+    .status-dot.thinking { background: #bd8c43; }
+    .status-label { margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+    .nudge-feed {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0 28px;
+    }
+
+    .nudge-card {
+      width: min(100%, 310px);
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-left: 2px solid var(--accent);
+      background: #eeede7;
+      color: #454641;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .nudge-card.resolved { opacity: .38; }
+
+    .ask-form {
+      display: flex;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .ask-input {
+      min-width: 0;
+      flex: 1;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid #cbc9c1;
+      border-radius: 0;
+      outline: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .ask-input:focus { border-color: #777872; }
+    .ask-input::placeholder { color: #92938d; }
+
+    .send-button {
+      height: 38px;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+    /* ================= END PLACEHOLDER LAYOUT SHELL ================= */
+
+    /* Existing ruled canvas and transcription presentation. */
+    #worksheet {
+      width: 100%;
+      min-height: 100%;
+      background: var(--paper);
     }
 
     .band { position: relative; border-bottom: 1px solid var(--rule); }
@@ -81,40 +219,124 @@
 
     .transcript-strip {
       height: var(--transcript-height);
+      display: flex;
+      align-items: center;
+      padding: 0 34px 0 14px;
       border-top: 1px solid rgba(217, 216, 209, .42);
+      color: #777872;
+      font-size: 13px;
+      line-height: 1;
+      cursor: text;
+      overflow: hidden;
+    }
+
+    .transcript-strip:empty { cursor: default; }
+    .transcript-strip.pending { color: #a2a39d; }
+    .transcript-strip.error { color: #9a7772; cursor: pointer; }
+    .transcript-strip .katex { font-size: .96em; }
+
+    .verdict-marker {
+      position: absolute;
+      right: 14px;
+      bottom: 5px;
+      display: none;
       pointer-events: none;
     }
 
-    @media (max-width: 560px) {
-      header { padding-inline: 12px 8px; }
-      .hint { display: none; }
-      button { padding-inline: 9px; }
+    .verdict-marker.valid {
+      display: block;
+      color: #55765d;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 14px;
     }
+
+    .verdict-marker.invalid {
+      display: block;
+      width: 7px;
+      height: 7px;
+      bottom: 8px;
+      border-radius: 50%;
+      background: #c29a58;
+    }
+
+    .transcript-editor {
+      width: 100%;
+      height: 20px;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #5f605b;
+      font: 12px/20px ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
   </style>
 </head>
 <body>
-  <header>
-    <div><span class="title">Maths workspace</span><span class="hint">One step per line</span></div>
-    <nav class="tools" aria-label="Ink tools">
-      <button id="penButton" class="active" type="button" aria-pressed="true">Pen</button>
-      <button id="eraserButton" type="button" aria-pressed="false">Eraser</button>
-      <button id="undoButton" type="button" title="Undo in the active line">Undo</button>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <section class="workspace-pane" aria-label="Maths workspace">
+      <header class="canvas-header">
+        <div class="problem-editor">
+          <input class="problem-input" type="text" aria-label="Maths problem" placeholder="Type or photograph a maths problem">
+          <button class="problem-apply" type="button" hidden>Use problem</button>
+          <button class="problem-upload" type="button" aria-label="Photograph or upload a problem" title="Photograph or upload a problem">📷</button>
+          <input class="problem-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        </div>
+        <nav class="tools" aria-label="Ink tools">
+          <button id="penButton" class="active" type="button" aria-pressed="true">Pen</button>
+          <button id="eraserButton" type="button" aria-pressed="false">Eraser</button>
+          <button id="undoButton" type="button" title="Undo in the active line">Undo</button>
+        </nav>
+      </header>
+      <div class="canvas-scroll">
+        <main id="worksheet" aria-label="Ruled handwriting canvas"></main>
+      </div>
+    </section>
 
-  <main id="worksheet" aria-label="Ruled handwriting canvas"></main>
+    <aside class="tutor-panel" aria-label="Tutor panel">
+      <div class="tutor-identity">
+        <div class="duck-avatar" aria-hidden="true">🦆</div>
+        <div>
+          <div class="tutor-name-row">
+            <span class="tutor-name">Rubber duck</span>
+            <span class="status-dot watching" title="Watching"></span>
+          </div>
+          <div class="status-label">watching</div>
+        </div>
+      </div>
 
+      <div class="nudge-feed" aria-label="Tutor nudges"></div>
+
+      <form class="ask-form">
+        <input class="ask-input" type="text" placeholder="ask, but expect a question back" aria-label="Ask the duck">
+        <button class="send-button" type="submit">Send</button>
+      </form>
+    </aside>
+  </div>
+
+  <script src="/vendor/katex/katex.min.js"></script>
   <script>
     (() => {
       const BAND_HEIGHT = 90;
-      const EXPORT_SCALE = 2;
+      const EXPORT_SCALE = 3;
       const EXPORT_PADDING = 12;
       const BASE_WIDTH = 3.15;
       const ERASER_RADIUS = 12;
       const worksheet = document.querySelector('#worksheet');
+      const problemInput = document.querySelector('.problem-input');
+      const problemApplyButton = document.querySelector('.problem-apply');
+      const problemUploadButton = document.querySelector('.problem-upload');
+      const problemFileInput = document.querySelector('.problem-file');
       const penButton = document.querySelector('#penButton');
       const eraserButton = document.querySelector('#eraserButton');
       const undoButton = document.querySelector('#undoButton');
+      const nudgeFeed = document.querySelector('.nudge-feed');
+      const askForm = document.querySelector('.ask-form');
+      const askInput = document.querySelector('.ask-input');
+      const sendButton = document.querySelector('.send-button');
+      const tutorStatusDot = document.querySelector('.status-dot');
+      const tutorStatusLabel = document.querySelector('.status-label');
 
       // Public data model: every point is local to its own band, in CSS pixels.
       const bands = [];
@@ -126,6 +348,14 @@
       let lastPenUpBand = null;
       let commitTimer = null;
       let resizeObserver = null;
+      let tutorRequestsInFlight = 0;
+      const allNudges = [];
+      const restoredProblem = sessionStorage.getItem('pendingProblem');
+      if (restoredProblem !== null) {
+        problemInput.value = restoredProblem;
+        sessionStorage.removeItem('pendingProblem');
+      }
+      let activeProblem = problemInput.value.trim();
 
       function pressureWidth(pressure) {
         const p = Number.isFinite(pressure) && pressure > 0 ? pressure : 0.5;
@@ -143,8 +373,11 @@
         canvas.setAttribute('aria-label', `Handwriting line ${index + 1}`);
         const transcript = document.createElement('div');
         transcript.className = 'transcript-strip';
-        transcript.setAttribute('aria-hidden', 'true');
-        element.append(canvas, transcript);
+        transcript.setAttribute('aria-label', `Transcription for line ${index + 1}`);
+        transcript.title = 'Tap to edit LaTeX';
+        const verdictMarker = document.createElement('span');
+        verdictMarker.className = 'verdict-marker';
+        element.append(canvas, transcript, verdictMarker);
         worksheet.append(element);
 
         const band = {
@@ -152,6 +385,18 @@
           history: [],
           revision: 0,
           lastCommittedRevision: 0,
+          transcript,
+          latex: '',
+          transcriptionVersion: 0,
+          transcriptionPending: false,
+          verificationVersion: 0,
+          verificationPending: false,
+          verdict: null,
+          setupReason: null,
+          tutorRevision: 0,
+          lastNudgedTutorRevision: -1,
+          nudgeHistory: [],
+          verdictMarker,
           element,
           canvas
         };
@@ -163,6 +408,7 @@
         canvas.addEventListener('pointermove', event => pointerMove(event, index));
         canvas.addEventListener('pointerup', event => pointerUp(event, index));
         canvas.addEventListener('pointercancel', event => pointerUp(event, index));
+        transcript.addEventListener('click', () => editTranscript(index));
         return band;
       }
 
@@ -198,6 +444,9 @@
       }
 
       function beginBandInteraction(index) {
+        if (!worksheetHasWork() && problemInput.value.trim() !== activeProblem) {
+          applyProblemDraft();
+        }
         activeBandIndex = index;
         clearTimeout(commitTimer);
         if (lastPenUpBand !== null && lastPenUpBand !== index) {
@@ -213,6 +462,9 @@
         band.canvas.setPointerCapture(event.pointerId);
 
         if (tool === 'pen') {
+          // Ink changes invalidate a transcription before the next commit fires.
+          band.transcriptionVersion++;
+          invalidateAffectedVerifications(index);
           saveUndoState(band);
           const stroke = eventPoints(event, band.canvas);
           band.strokes.push(stroke);
@@ -248,6 +500,11 @@
         if (gesture.changed) {
           band.revision++;
           syncBandDebugState(band);
+          if (!band.strokes.length) {
+            band.latex = '';
+            renderTranscript(band);
+            verifyAffectedLines(index);
+          }
           if (index === bands.length - 1 && band.strokes.length) createBand();
           renderBand(band);
         }
@@ -265,6 +522,8 @@
         }
         if (!hitIndexes.size) return;
         if (!gesture.undoSaved) {
+          band.transcriptionVersion++;
+          invalidateAffectedVerifications(Number(band.element.dataset.bandIndex));
           saveUndoState(band);
           gesture.undoSaved = true;
         }
@@ -349,23 +608,413 @@
       function scheduleCommit(index) {
         clearTimeout(commitTimer);
         if (!bands[index].strokes.length) return;
-        commitTimer = setTimeout(() => commitBand(index), 2000);
+        commitTimer = setTimeout(() => commitBand(index), 700);
       }
 
       function commitBand(index) {
         const band = bands[index];
         if (!band || !band.strokes.length || band.revision === band.lastCommittedRevision) return;
         band.lastCommittedRevision = band.revision;
-        window.onLineCommit(index);
+        const committedAt = performance.now();
+        console.log(`[line ${index + 1}] commit fired`, new Date().toISOString());
+        window.onLineCommit(index, committedAt);
       }
 
-      // Replace this function later to connect transcription. It logs by default for testing.
-      window.onLineCommit = index => console.log('[line commit]', JSON.stringify({
-        bandIndex: index,
-        strokeCount: bands[index].strokes.length,
-        pointCount: bands[index].strokes.reduce((sum, stroke) => sum + stroke.length, 0),
-        revision: bands[index].revision
-      }));
+      window.onLineCommit = async (index, committedAt = performance.now()) => {
+        const band = bands[index];
+        if (!band) return;
+        const version = ++band.transcriptionVersion;
+        band.transcriptionPending = true;
+        invalidateAffectedVerifications(index);
+        showTranscriptStatus(band, '…', 'pending');
+
+        try {
+          const blob = await window.exportBand(index);
+          const image = await blobToDataUrl(blob);
+          const latex = await transcribeWithRetry(image, {
+            problem: activeProblem,
+            previousLines: bands.slice(0, index).map(previousBand => previousBand.latex).filter(Boolean)
+          });
+          if (version !== band.transcriptionVersion) {
+            console.debug(`[line ${index + 1}] stale transcription discarded`);
+            return;
+          }
+          band.transcriptionPending = false;
+          band.latex = latex;
+          band.tutorRevision++;
+          renderTranscript(band);
+          const elapsed = Math.round(performance.now() - committedAt);
+          console.log(`[line ${index + 1}] transcript rendered`, new Date().toISOString(), `${elapsed}ms after commit`);
+          verifyAffectedLines(index);
+        } catch (error) {
+          if (version !== band.transcriptionVersion) {
+            console.debug(`[line ${index + 1}] stale transcription failure discarded`);
+            return;
+          }
+          band.transcriptionPending = false;
+          console.warn(`[line ${index + 1}] transcription failed`, error);
+          showTranscriptStatus(band, 'Couldn’t transcribe — tap to retry', 'error');
+        }
+      };
+
+      function blobToDataUrl(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error || new Error('Could not read PNG'));
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      function updateProblemDraftState() {
+        problemApplyButton.hidden = problemInput.value.trim() === activeProblem;
+      }
+
+      function worksheetHasWork() {
+        return bands.some(band => band.strokes.length > 0);
+      }
+
+      function applyProblemDraft() {
+        const nextProblem = problemInput.value.trim();
+        if (nextProblem === activeProblem) {
+          updateProblemDraftState();
+          return;
+        }
+
+        if (worksheetHasWork()) {
+          const shouldClear = window.confirm('Changing the problem will clear this worksheet. Continue?');
+          if (!shouldClear) {
+            problemInput.value = activeProblem;
+            updateProblemDraftState();
+            return;
+          }
+          sessionStorage.setItem('pendingProblem', nextProblem);
+          window.location.reload();
+          return;
+        }
+
+        activeProblem = nextProblem;
+        problemInput.value = activeProblem;
+        updateProblemDraftState();
+      }
+
+      async function extractProblemFromImage(file) {
+        problemUploadButton.disabled = true;
+        problemUploadButton.textContent = '…';
+        try {
+          const image = await blobToDataUrl(file);
+          const response = await fetch('/api/extract-problem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image })
+          });
+          if (!response.ok) throw new Error(`Problem extraction failed (${response.status})`);
+          const result = await response.json();
+          if (typeof result.problem !== 'string' || !result.problem.trim()) {
+            throw new Error('No question text was found');
+          }
+
+          // This is a draft until the student explicitly chooses “Use problem”.
+          problemInput.value = result.problem.trim();
+          updateProblemDraftState();
+          problemInput.focus();
+          problemInput.select();
+        } catch (error) {
+          console.warn('[problem photo] extraction failed', error);
+          window.alert('Couldn’t read that question. Try another photo or type it in.');
+        } finally {
+          problemUploadButton.disabled = false;
+          problemUploadButton.textContent = '📷';
+          problemFileInput.value = '';
+        }
+      }
+
+      async function transcribeWithRetry(image, context) {
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const response = await fetch('/api/transcribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image, ...context })
+            });
+            if (!response.ok) throw new Error(`Transcription request failed (${response.status})`);
+            const result = await response.json();
+            if (typeof result.latex !== 'string') throw new Error('Invalid transcription response');
+            if (!result.latex.trim()) throw new Error('Empty transcription for a line with ink');
+            return result.latex;
+          } catch (error) {
+            lastError = error;
+            if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 700));
+          }
+        }
+        throw lastError;
+      }
+
+      function showTranscriptStatus(band, text, className) {
+        band.transcript.replaceChildren(document.createTextNode(text));
+        band.transcript.className = `transcript-strip ${className}`;
+      }
+
+      function renderTranscript(band) {
+        band.transcript.className = 'transcript-strip';
+        band.transcript.replaceChildren();
+        if (!band.latex) {
+          if (band.strokes.length) showTranscriptStatus(band, 'Couldn’t read — tap to retry', 'error');
+          return;
+        }
+        katex.render(band.latex, band.transcript, { throwOnError: false, displayMode: false });
+      }
+
+      function invalidateAffectedVerifications(index) {
+        for (const targetIndex of [index, index + 1]) {
+          const target = bands[targetIndex];
+          if (!target) continue;
+          target.verificationVersion++;
+          target.verificationPending = false;
+          target.verdict = null;
+          if (targetIndex === 0) target.setupReason = null;
+          renderVerdict(target, null);
+        }
+      }
+
+      function verifyAffectedLines(index) {
+        verifyLine(index);
+        verifyLine(index + 1);
+      }
+
+      async function verifyLine(index) {
+        const band = bands[index];
+        if (!band) return;
+        const version = ++band.verificationVersion;
+        band.verificationPending = false;
+        band.verdict = null;
+        if (index === 0) band.setupReason = null;
+        renderVerdict(band, null);
+
+        if (!band.latex) return;
+        let endpoint;
+        let requestBody;
+        if (index === 0) {
+          if (!activeProblem) return;
+          endpoint = '/api/check-setup';
+          requestBody = { problem: activeProblem, firstLine: band.latex };
+          console.log('[setup check outgoing]', JSON.stringify(requestBody));
+        } else {
+          const previous = bands[index - 1];
+          if (!previous?.latex) return;
+          endpoint = '/api/verify';
+          requestBody = { prev: previous.latex, current: band.latex };
+        }
+
+        band.verificationPending = true;
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+          if (!response.ok) throw new Error(`Verification request failed (${response.status})`);
+          const result = await response.json();
+          if (index === 0) console.log('[setup check response]', JSON.stringify(result));
+          if (index === 0 && (typeof result.valid !== 'boolean' || typeof result.reason !== 'string')) {
+            throw new Error('Invalid setup-check response');
+          }
+          const verdict = index === 0
+            ? { valid: result.valid, errorType: result.valid ? null : 'not_equivalent' }
+            : result;
+          if (version !== band.verificationVersion) return;
+          band.verificationPending = false;
+          band.setupReason = index === 0 ? result.reason : null;
+          band.verdict = verdict.valid === true
+            ? true
+            : verdict.errorType === 'not_equivalent' ? false : null;
+          renderVerdict(band, verdict);
+          if (band.verdict === true) {
+            fadeLineNudges(index);
+          } else if (band.verdict === false) {
+            requestLineNudge(index, version);
+          }
+        } catch (error) {
+          if (version !== band.verificationVersion) return;
+          band.verificationPending = false;
+          band.verdict = null;
+          console.warn(`[line ${index + 1}] verification unavailable`, error);
+          renderVerdict(band, null);
+        }
+      }
+
+      function tutorContext(flaggedBandIndex = null, targetBandIndex = flaggedBandIndex) {
+        const committed = bands
+          .map((band, bandIndex) => ({ band, bandIndex }))
+          .filter(({ band }) => band.lastCommittedRevision > 0);
+        return {
+          problem: activeProblem,
+          lines: committed.map(({ band, bandIndex }) => ({
+            latex: band.latex,
+            valid: band.verdict,
+            reason: band.setupReason,
+            nudgeCount: band.nudgeHistory.length,
+            lineNumber: bandIndex + 1
+          })),
+          flaggedLine: flaggedBandIndex === null
+            ? null
+            : committed.findIndex(({ bandIndex }) => bandIndex === flaggedBandIndex),
+          targetLine: targetBandIndex === null
+            ? null
+            : committed.findIndex(({ bandIndex }) => bandIndex === targetBandIndex)
+        };
+      }
+
+      function rootNudgeBandIndex(flaggedBandIndex) {
+        const earlierRoot = bands.findIndex((band, index) =>
+          index < flaggedBandIndex && band.verdict === false && band.nudgeHistory.length > 0
+        );
+        return earlierRoot >= 0 ? earlierRoot : flaggedBandIndex;
+      }
+
+      async function requestLineNudge(index, verificationVersion) {
+        const band = bands[index];
+        if (!band || band.verdict !== false || band.transcriptionPending || band.verificationPending) return;
+        const tutorRevision = band.tutorRevision;
+        if (band.lastNudgedTutorRevision >= tutorRevision) return;
+
+        const targetIndex = rootNudgeBandIndex(index);
+        const targetBand = bands[targetIndex];
+        const context = tutorContext(index, targetIndex);
+        if (!targetBand || context.flaggedLine < 0 || context.targetLine < 0) return;
+        band.lastNudgedTutorRevision = tutorRevision;
+
+        try {
+          const nudge = await fetchNudge({
+            ...context,
+            nudgeHistory: [...targetBand.nudgeHistory],
+            studentMessage: ''
+          });
+          if (band.tutorRevision !== tutorRevision ||
+              band.verificationVersion !== verificationVersion ||
+              band.verdict !== false ||
+              band.transcriptionPending ||
+              band.verificationPending) return;
+          if (hasDuplicateNudge(nudge, targetBand)) {
+            console.warn(`[line ${targetIndex + 1}] duplicate nudge discarded`, nudge);
+            return;
+          }
+          targetBand.nudgeHistory.push(nudge);
+          addNudgeCard(nudge, targetIndex);
+        } catch (error) {
+          console.warn(`[line ${index + 1}] nudge unavailable`, error);
+        }
+      }
+
+      async function fetchNudge(payload) {
+        setTutorBusy(1);
+        try {
+          console.log('[nudge outgoing]', JSON.stringify(payload));
+          const response = await fetch('/api/nudge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error(`Nudge request failed (${response.status})`);
+          const result = await response.json();
+          if (typeof result.nudge !== 'string' || !result.nudge.trim()) {
+            throw new Error('Invalid nudge response');
+          }
+          return result.nudge.trim();
+        } finally {
+          setTutorBusy(-1);
+        }
+      }
+
+      function setTutorBusy(change) {
+        tutorRequestsInFlight = Math.max(0, tutorRequestsInFlight + change);
+        const thinking = tutorRequestsInFlight > 0;
+        tutorStatusLabel.textContent = thinking ? 'thinking…' : 'watching';
+        tutorStatusDot.className = `status-dot ${thinking ? 'thinking' : 'watching'}`;
+        tutorStatusDot.title = thinking ? 'Thinking' : 'Watching';
+        sendButton.disabled = thinking;
+      }
+
+      function addNudgeCard(nudge, lineIndex = null) {
+        const card = document.createElement('div');
+        card.className = 'nudge-card';
+        card.textContent = nudge;
+        if (lineIndex !== null) card.dataset.lineIndex = lineIndex;
+        nudgeFeed.prepend(card);
+        allNudges.push(nudge);
+      }
+
+      function hasDuplicateNudge(nudge, band) {
+        const normalized = normalizeNudge(nudge);
+        return band.nudgeHistory.some(previous => normalizeNudge(previous) === normalized) ||
+          [...nudgeFeed.querySelectorAll('.nudge-card')]
+            .some(card => normalizeNudge(card.textContent) === normalized);
+      }
+
+      function normalizeNudge(value) {
+        return value.trim().toLocaleLowerCase().replace(/\s+/g, ' ');
+      }
+
+      function fadeLineNudges(index) {
+        nudgeFeed.querySelectorAll(`.nudge-card[data-line-index="${index}"]`)
+          .forEach(card => card.classList.add('resolved'));
+      }
+
+      function renderVerdict(band, verdict) {
+        band.verdictMarker.className = 'verdict-marker';
+        band.verdictMarker.replaceChildren();
+        band.verdictMarker.removeAttribute('aria-label');
+
+        if (verdict?.valid === true) {
+          band.verdictMarker.classList.add('valid');
+          band.verdictMarker.textContent = '✓';
+          band.verdictMarker.setAttribute('aria-label', 'Equivalent step');
+        } else if (verdict?.errorType === 'not_equivalent') {
+          band.verdictMarker.classList.add('invalid');
+          band.verdictMarker.setAttribute('aria-label', 'Step is not equivalent');
+        }
+      }
+
+      function editTranscript(index) {
+        const band = bands[index];
+        if (!band || band.transcript.querySelector('input')) return;
+        if (band.transcript.classList.contains('error')) {
+          window.onLineCommit(index);
+          return;
+        }
+
+        // A manual edit is authoritative over any request already in flight.
+        band.transcriptionVersion++;
+        band.transcriptionPending = false;
+        invalidateAffectedVerifications(index);
+        const originalLatex = band.latex;
+        const input = document.createElement('input');
+        input.className = 'transcript-editor';
+        input.type = 'text';
+        input.value = band.latex;
+        input.setAttribute('aria-label', `Edit LaTeX for line ${index + 1}`);
+        band.transcript.className = 'transcript-strip';
+        band.transcript.replaceChildren(input);
+        input.focus();
+        input.select();
+
+        const finish = () => {
+          if (!input.isConnected) return;
+          band.latex = input.value.trim();
+          if (band.latex !== originalLatex) band.tutorRevision++;
+          renderTranscript(band);
+          verifyAffectedLines(index);
+        };
+        input.addEventListener('blur', finish);
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') input.blur();
+          if (event.key === 'Escape') {
+            input.value = band.latex;
+            input.blur();
+          }
+        });
+      }
 
       // Returns Promise<Blob>. The PNG is tightly cropped, padded, white, and rendered at 2x.
       window.exportBand = async function exportBand(index) {
@@ -414,11 +1063,44 @@
         if (!band || !band.history.length) return;
         clearTimeout(commitTimer);
         band.strokes = band.history.pop();
+        band.transcriptionVersion++;
+        invalidateAffectedVerifications(activeBandIndex);
         band.revision++;
         syncBandDebugState(band);
         renderBand(band);
         lastPenUpBand = activeBandIndex;
         scheduleCommit(activeBandIndex);
+      });
+
+      problemInput.addEventListener('input', updateProblemDraftState);
+      problemInput.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        applyProblemDraft();
+      });
+      problemApplyButton.addEventListener('click', applyProblemDraft);
+      problemUploadButton.addEventListener('click', () => problemFileInput.click());
+      problemFileInput.addEventListener('change', () => {
+        const [file] = problemFileInput.files;
+        if (file) extractProblemFromImage(file);
+      });
+
+      askForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const studentMessage = askInput.value.trim();
+        if (!studentMessage || tutorRequestsInFlight) return;
+        askInput.value = '';
+
+        try {
+          const nudge = await fetchNudge({
+            ...tutorContext(),
+            nudgeHistory: [...allNudges],
+            studentMessage
+          });
+          addNudgeCard(nudge);
+        } catch (error) {
+          console.warn('[student question] nudge unavailable', error);
+        }
       });
 
       for (let i = 0; i < 8; i++) createBand();

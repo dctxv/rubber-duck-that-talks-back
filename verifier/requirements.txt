@@ -1,0 +1,4 @@
+fastapi==0.139.0
+uvicorn==0.51.0
+sympy==1.14.0
+antlr4-python3-runtime==4.11.1
