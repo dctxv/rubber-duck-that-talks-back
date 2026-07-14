@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Ruled maths workspace</title>
+  <title>Workings · handwritten maths</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <style>
     :root {
@@ -389,6 +392,35 @@
       letter-spacing: .06em;
     }
 
+    .receipt-headline {
+      margin: 24px 0 0;
+      padding: 22px 24px;
+      border: 1px solid var(--rule);
+      border-left: 5px solid var(--accent);
+      background: var(--card-bg);
+    }
+
+    .receipt-headline-label {
+      color: var(--muted);
+      font: 500 10px/1.3 "IBM Plex Mono", monospace;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .receipt-headline-title {
+      margin: 7px 0 0;
+      font: italic 500 31px/1.08 "Newsreader", serif;
+      color: var(--ink);
+    }
+
+    .receipt-headline-detail {
+      max-width: 680px;
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     .receipt-evidence {
       margin: 28px 0;
       padding: 18px 0;
@@ -400,7 +432,7 @@
 
     .receipt-metrics {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
       border-top: 1px solid var(--rule);
       border-left: 1px solid var(--rule);
     }
@@ -446,29 +478,631 @@
       font-size: 12px;
     }
 
+    /* ==================================================================
+       MARGINALIA UI — visual shell around the existing workspace model
+       ================================================================== */
+    :root {
+      --paper: #f5efe2;
+      --desk: #f5efe2;
+      --ink: #201c16;
+      --rule: rgba(32, 28, 22, .12);
+      --muted: #8b8577;
+      --accent: #33507e;
+      --accent-soft: rgba(51, 80, 126, .10);
+      --panel-bg: #efe8d8;
+      --card-bg: #fbf8f0;
+      --correct: #33507e;
+      --wrong: #a6742c;
+      --duck-yellow: #e6bd4e;
+      --duck-wing: #d5a83f;
+      --duck-beak: #d98a38;
+    }
+
+    :root[data-theme="night"] {
+      --paper: #2a2216;
+      --desk: #2a2216;
+      --ink: #ead9b8;
+      --rule: rgba(234, 217, 184, .14);
+      --muted: #a08f6c;
+      --accent: #8ca9d8;
+      --accent-soft: rgba(140, 169, 216, .16);
+      --panel-bg: #221b10;
+      --card-bg: #2f2618;
+      --correct: #8ca9d8;
+      --wrong: #d6a85e;
+      --duck-yellow: #dfb94f;
+      --duck-wing: #bd8e36;
+      --duck-beak: #d58b43;
+    }
+
+    @keyframes marg-wobble {
+      0%, 100% { transform: rotate(-1deg) translateY(0); }
+      50% { transform: rotate(1deg) translateY(-2px); }
+    }
+
+    @keyframes marg-thinking {
+      0%, 100% { transform: translateY(0) rotate(-1deg); }
+      50% { transform: translateY(-3px) rotate(2deg); }
+    }
+
+    @keyframes marg-bubble-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    html, body { background: var(--paper); color: var(--ink); }
+
+    body {
+      font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font-family: inherit; }
+
+    button {
+      height: 36px;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    button:hover { background: var(--accent-soft); color: var(--ink); }
+    button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+    button:focus-visible { outline-color: var(--accent); }
+
+    .marginalia-topbar {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      height: 66px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--rule);
+      background: color-mix(in srgb, var(--paper) 94%, transparent);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand-wordmark {
+      font-family: "Newsreader", serif;
+      font-size: 21px;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .topbar-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding-right: 104px;
+    }
+
+    .round-control {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .duck-corner {
+      position: absolute;
+      top: 3px;
+      right: 18px;
+      width: 92px;
+      height: 60px;
+      animation: marg-wobble 3.2s ease-in-out infinite;
+      transform-origin: 60% 70%;
+    }
+
+    .duck-corner.thinking { animation: marg-thinking .75s ease-in-out infinite; }
+    .duck-corner svg { width: 100%; height: 100%; overflow: visible; }
+
+    .duck-bubble {
+      position: absolute;
+      top: 7px;
+      right: 104px;
+      width: max-content;
+      max-width: 260px;
+      padding: 9px 12px;
+      border: 1px solid var(--rule);
+      border-radius: 13px 13px 4px 13px;
+      background: var(--card-bg);
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.4;
+      animation: marg-bubble-in .25s ease both;
+    }
+
+    .duck-bubble[hidden] { display: none; }
+
+    .app-shell {
+      position: fixed;
+      inset: 66px 0 0;
+      width: auto;
+      height: auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      background: var(--paper);
+    }
+
+    .workspace-pane { background: var(--paper); }
+
+    .canvas-header {
+      flex: 0 0 54px;
+      padding: 0 22px 0 28px;
+      border-color: var(--rule);
+      background: var(--paper);
+    }
+
+    .subject-chip {
+      flex: 0 0 auto;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font: 500 11px/1.2 "IBM Plex Mono", monospace;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .problem-editor { margin: 0 0 0 12px; }
+
+    .problem-input {
+      height: 38px;
+      padding: 0 8px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .problem-input:hover, .problem-input:focus {
+      border-color: var(--rule);
+      background: var(--card-bg);
+    }
+
+    .problem-input::placeholder { color: var(--muted); }
+    .problem-upload { font-size: 0; }
+    .problem-upload::before { content: "📷"; font-size: 15px; }
+
+    .canvas-scroll {
+      min-height: 0;
+      padding: 0;
+      background: var(--paper);
+    }
+
+    #worksheet {
+      min-height: 100%;
+      padding: 20px 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--paper);
+    }
+
+    .band {
+      position: relative;
+      flex: 0 0 auto;
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: var(--card-bg);
+    }
+
+    .ink-canvas {
+      width: 100%;
+      height: var(--band-height);
+      max-width: 100%;
+      background:
+        linear-gradient(to bottom, transparent calc(100% - 16px), var(--rule) calc(100% - 15px), transparent calc(100% - 14px));
+      contain: strict;
+    }
+
+    .transcript-strip {
+      height: var(--transcript-height);
+      padding: 0 42px 0 16px;
+      border-color: var(--rule);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .transcript-strip.pending { color: var(--muted); }
+    .transcript-strip.error { color: var(--wrong); }
+    .verdict-marker { right: 15px; }
+    .verdict-marker.valid { color: var(--correct); }
+    .verdict-marker.invalid { background: var(--wrong); }
+
+    .workspace-toolbar {
+      flex: 0 0 60px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 28px;
+      border-top: 1px solid var(--rule);
+      background: var(--card-bg);
+    }
+
+    .tool-icon {
+      width: 36px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .tool-icon svg { pointer-events: none; }
+    .toolbar-divider { width: 1px; height: 22px; margin: 0 3px; background: var(--rule); }
+    #receiptButton { color: var(--muted); }
+    #oneMoreButton { margin-left: auto; border-color: var(--accent); color: var(--accent); }
+
+    .tutor-panel {
+      border-color: var(--rule);
+      background: var(--panel-bg);
+    }
+
+    .panel-tabs {
+      flex-basis: 48px;
+      align-items: center;
+      padding: 0 20px;
+      border-color: var(--rule);
+    }
+
+    .panel-tab {
+      height: 48px;
+      font: 500 11px/48px "IBM Plex Mono", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .tutor-view { padding: 20px; }
+    .tutor-identity { gap: 10px; padding-bottom: 18px; }
+
+    .duck-avatar {
+      width: 40px;
+      height: 40px;
+      border-color: var(--rule);
+      background: var(--duck-yellow);
+      font-size: 21px;
+    }
+
+    .tutor-name { font-family: "Newsreader", serif; font-size: 17px; font-style: italic; }
+    .status-label, .receipt-kicker, .receipt-line-number, .receipt-line-verdict { color: var(--muted); }
+    .nudge-feed { padding-top: 6px; }
+
+    .nudge-card {
+      width: 100%;
+      margin-bottom: 14px;
+      padding: 12px 13px;
+      border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--ink);
+    }
+
+    .ask-form { border-color: var(--rule); }
+    .ask-input { border-color: var(--rule); border-radius: 8px; background: var(--card-bg); color: var(--ink); }
+    .ask-input:focus { border-color: var(--accent); }
+    .send-button { border-radius: 8px; border-color: var(--ink); background: var(--ink); color: var(--paper); }
+    .graph-panel, .graph-status { background: var(--panel-bg); }
+    .graph-caption { border-color: var(--rule); color: var(--muted); }
+
+    .receipt-view { z-index: 100; background: var(--paper); }
+    .receipt-page {
+      width: min(780px, calc(100% - 64px));
+      min-height: auto;
+      margin: 88px auto 60px;
+      padding: 36px 40px;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      background: var(--card-bg);
+    }
+
+    .receipt-title, .receipt-section-title { font-family: "Newsreader", serif; font-style: italic; }
+    .receipt-header { border-color: var(--rule); }
+    .receipt-problem, .receipt-evidence { color: var(--ink); }
+    .receipt-evidence, .receipt-metrics, .receipt-derivation, .receipt-line { border-color: var(--rule); }
+    .receipt-metric { border-color: var(--rule); }
+    .receipt-metric.hero { background: var(--accent-soft); }
+    .receipt-metric-detail, .receipt-line-nudges { color: var(--muted); }
+
+    [hidden] { display: none !important; }
+
+    .brand-wordmark {
+      width: auto;
+      height: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .brand-wordmark:hover { background: transparent; }
+
+    .marketing-screen {
+      position: fixed;
+      inset: 66px 0 0;
+      z-index: 5;
+      overflow-y: auto;
+      background: var(--paper);
+    }
+
+    .landing-screen {
+      display: grid;
+      place-items: center;
+      padding: 54px 30px;
+    }
+
+    .ruled-backdrop {
+      position: absolute;
+      inset: 0;
+      opacity: .55;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(to bottom, transparent 0 38px, var(--rule) 38px 39px);
+    }
+
+    .landing-copy {
+      position: relative;
+      width: min(720px, 100%);
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font: 500 11px/1.3 "IBM Plex Mono", monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .landing-copy h1, .hub-content h1 {
+      margin: 0;
+      font-family: "Newsreader", serif;
+      font-style: italic;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .landing-copy h1 { font-size: clamp(46px, 6vw, 68px); line-height: 1.04; }
+    .landing-copy > p { max-width: 540px; margin: 24px auto 32px; color: var(--muted); font-size: 16px; line-height: 1.65; }
+
+    .primary-action, .next-step-button {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      font-weight: 500;
+    }
+
+    .primary-action { height: 44px; padding: 0 22px; }
+    .primary-action:hover, .next-step-button:hover { background: var(--ink); color: var(--paper); opacity: .9; }
+
+    .landing-example {
+      margin-top: 58px;
+      padding: 18px 22px;
+      border: 1px solid var(--rule);
+      border-radius: 16px;
+      background: var(--card-bg);
+      text-align: left;
+    }
+
+    .example-label { color: var(--muted); font: 500 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; }
+    .example-working { margin-top: 14px; color: var(--ink); font: italic 27px/1.2 "Newsreader", serif; }
+
+    .hub-screen { padding: 70px 40px; }
+    .hub-content { width: min(1060px, 100%); margin: 0 auto; }
+    .hub-content h1 { margin-bottom: 34px; font-size: 36px; }
+
+    .subject-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+
+    .subject-card {
+      min-height: 190px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      border: 1px solid var(--rule);
+      border-radius: 16px;
+      background: var(--card-bg);
+      color: var(--ink);
+    }
+
+    button.subject-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .subject-name { margin-bottom: 24px; color: var(--accent); font: 500 11px/1.3 "IBM Plex Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
+    .subject-card strong { font: italic 22px/1.25 "Newsreader", serif; }
+    .subject-detail { margin-top: auto; padding-top: 24px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .disabled-card { opacity: .52; border-style: dashed; }
+
+    #workspaceScreen[hidden] { display: none !important; }
+
+    #worksheet.work-surface {
+      width: 100%;
+      min-width: 0;
+      min-height: 0;
+      flex: 1;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--paper);
+    }
+
+    .submitted-scroll {
+      flex: 0 1 44%;
+      min-height: 130px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    #submittedSteps {
+      min-height: 100%;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .composition-host {
+      position: relative;
+      min-height: 230px;
+      flex: 1 1 56%;
+      overflow: hidden;
+      background:
+        linear-gradient(to bottom, transparent calc(100% - 64px), var(--rule) calc(100% - 63px), transparent calc(100% - 62px));
+    }
+
+    .composition-hint {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .composition-hint.hidden { display: none; }
+
+    .composition-band {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .composition-band .ink-canvas {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    .composition-band .transcript-strip,
+    .composition-band .verdict-marker { display: none; }
+
+    .submitted-band {
+      flex: 0 0 auto;
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      background: var(--card-bg);
+    }
+
+    .submitted-band .ink-canvas {
+      height: 66px;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    .submitted-band .transcript-strip { height: 32px; }
+    .next-step-button { min-width: 98px; }
+    .next-step-button:disabled { opacity: .35; cursor: default; }
+
+    @media (max-width: 900px) {
+      .subject-grid { grid-template-columns: 1fr; }
+      .app-shell { grid-template-columns: minmax(0, 1fr) 280px; }
+    }
+
   </style>
 </head>
 <body>
-  <div class="app-shell">
+  <header class="marginalia-topbar">
+    <button id="brandButton" class="brand-wordmark" type="button">Workings</button>
+    <div class="topbar-actions">
+      <button id="muteButton" class="round-control" type="button" aria-label="Mute sound" title="Mute sound">♪</button>
+      <button id="themeButton" class="round-control" type="button" aria-label="Use dark theme" title="Use dark theme">☾</button>
+    </div>
+    <div class="duck-bubble" hidden></div>
+    <div class="duck-corner" aria-label="Rubber duck tutor">
+      <svg viewBox="0 0 120 100" role="img" aria-hidden="true">
+        <path d="M12 72 C10 49 25 29 50 25 C69 22 88 31 96 48 C101 59 94 69 82 75 C63 84 28 81 12 72 Z" fill="var(--duck-yellow)" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M43 43 C55 47 59 57 49 63 C40 61 36 53 43 43 Z" fill="var(--duck-wing)" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M93 45 L108 50 L92 56 Z" fill="var(--duck-beak)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="79" cy="37" r="2.5" fill="var(--ink)"/>
+      </svg>
+    </div>
+  </header>
+
+  <section id="landingScreen" class="marketing-screen landing-screen" aria-label="Welcome">
+    <div class="ruled-backdrop" aria-hidden="true"></div>
+    <div class="landing-copy">
+      <div class="eyebrow">For subjects where you show your working</div>
+      <h1>Write it out.<br>Let the duck watch.</h1>
+      <p>A handwriting workspace for maths. Every step is checked as you go. No answers handed over — just a small nudge when you drift.</p>
+      <button id="openNotebookButton" class="primary-action" type="button">Open your notebook →</button>
+      <div class="landing-example" aria-hidden="true">
+        <div class="example-label">Solve 5x + 7 = 31</div>
+        <div class="example-working">5x = 24 &nbsp; → &nbsp; x = 4.8</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hubScreen" class="marketing-screen hub-screen" aria-label="Your notebook" hidden>
+    <div class="hub-content">
+      <div class="eyebrow">Your notebook</div>
+      <h1>Pick up where you left off.</h1>
+      <div class="subject-grid">
+        <button id="openMathsButton" class="subject-card maths-card" type="button">
+          <span class="subject-name">Maths</span>
+          <strong class="hub-problem-preview">Start a maths problem</strong>
+          <span class="subject-detail">Handwriting, step checking, nudges and graphing</span>
+        </button>
+        <div class="subject-card disabled-card">
+          <span class="subject-name">Physics</span>
+          <strong>Coming soon</strong>
+          <span class="subject-detail">Unit checking, vectors and kinematics</span>
+        </div>
+        <div class="subject-card disabled-card">
+          <span class="subject-name">Chemistry</span>
+          <strong>Coming soon</strong>
+          <span class="subject-detail">Equation balancing and stoichiometry</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="workspaceScreen" class="app-shell" hidden>
     <section class="workspace-pane" aria-label="Maths workspace">
       <header class="canvas-header">
+        <span class="subject-chip">Maths</span>
         <div class="problem-editor">
           <input class="problem-input" type="text" aria-label="Maths problem" placeholder="Type or photograph a maths problem">
           <button class="problem-apply" type="button" hidden>Use problem</button>
           <button class="problem-upload" type="button" aria-label="Photograph or upload a problem" title="Photograph or upload a problem">📷</button>
           <input class="problem-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
         </div>
-        <nav class="tools" aria-label="Ink tools">
-          <button id="oneMoreButton" type="button" hidden>One more like this</button>
-          <button id="receiptButton" type="button">Receipt</button>
-          <button id="penButton" class="active" type="button" aria-pressed="true">Pen</button>
-          <button id="eraserButton" type="button" aria-pressed="false">Eraser</button>
-          <button id="undoButton" type="button" title="Undo in the active line">Undo</button>
-        </nav>
       </header>
-      <div class="canvas-scroll">
-        <main id="worksheet" aria-label="Ruled handwriting canvas"></main>
+      <div id="worksheet" class="work-surface" aria-label="Handwriting workspace">
+        <div class="canvas-scroll submitted-scroll">
+          <main id="submittedSteps" aria-label="Submitted working"></main>
+        </div>
+        <div id="compositionHost" class="composition-host" aria-label="Write the next step">
+          <div class="composition-hint">Write the next step anywhere here</div>
+        </div>
       </div>
+      <nav class="workspace-toolbar tools" aria-label="Ink and workspace tools">
+        <button id="penButton" class="tool-icon active" type="button" aria-label="Pen" aria-pressed="true" title="Pen">
+          <svg width="17" height="17" viewBox="0 0 17 17" aria-hidden="true"><path d="M2 15 L3 11 L11 3 L14 6 L6 14 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="eraserButton" class="tool-icon" type="button" aria-label="Eraser" aria-pressed="false" title="Eraser">
+          <svg width="17" height="17" viewBox="0 0 17 17" aria-hidden="true"><rect x="3" y="6" width="11" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-18 8.5 9)"/></svg>
+        </button>
+        <button id="undoButton" class="tool-icon" type="button" aria-label="Undo in the active line" title="Undo in the active line">
+          <svg width="17" height="17" viewBox="0 0 17 17" aria-hidden="true"><path d="M5 4 L2 7.5 L5 11 M2 7.5 L11 7.5 C13.5 7.5 15 9.5 13.5 12 C12.5 13.7 10 14 8.5 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button id="nextStepButton" class="next-step-button" type="button">Next step</button>
+        <button id="receiptButton" type="button">Receipt</button>
+        <button id="oneMoreButton" type="button" hidden>One more like this</button>
+      </nav>
     </section>
 
     <aside class="tutor-panel" aria-label="Workspace side panel">
@@ -479,10 +1113,10 @@
 
       <div class="tutor-view panel-view" data-panel-view="tutor">
         <div class="tutor-identity">
-          <div class="duck-avatar" aria-hidden="true">🦆</div>
+          <div class="duck-avatar" aria-hidden="true">●</div>
           <div>
             <div class="tutor-name-row">
-              <span class="tutor-name">Rubber duck</span>
+              <span class="tutor-name">The duck</span>
               <span class="status-dot watching" title="Watching"></span>
             </div>
             <div class="status-label">watching</div>
@@ -530,6 +1164,7 @@
       const STORAGE_KEY = 'rubber-duck-worksheet';
       const SCHEMA_VERSION = 1;
       const SAVE_DEBOUNCE_MS = 300;
+      const MAX_NUDGES_PER_LINE = 3;
       const worksheet = document.querySelector('#worksheet');
       const problemInput = document.querySelector('.problem-input');
       const problemApplyButton = document.querySelector('.problem-apply');
@@ -553,6 +1188,21 @@
       const receiptView = document.querySelector('.receipt-view');
       const receiptCloseButton = document.querySelector('.receipt-close');
       const receiptContent = document.querySelector('.receipt-content');
+      const muteButton = document.querySelector('#muteButton');
+      const themeButton = document.querySelector('#themeButton');
+      const duckCorner = document.querySelector('.duck-corner');
+      const duckBubble = document.querySelector('.duck-bubble');
+      const submittedSteps = document.querySelector('#submittedSteps');
+      const compositionHost = document.querySelector('#compositionHost');
+      const compositionHint = document.querySelector('.composition-hint');
+      const nextStepButton = document.querySelector('#nextStepButton');
+      const landingScreen = document.querySelector('#landingScreen');
+      const hubScreen = document.querySelector('#hubScreen');
+      const workspaceScreen = document.querySelector('#workspaceScreen');
+      const brandButton = document.querySelector('#brandButton');
+      const openNotebookButton = document.querySelector('#openNotebookButton');
+      const openMathsButton = document.querySelector('#openMathsButton');
+      const hubProblemPreview = document.querySelector('.hub-problem-preview');
 
       // Public data model: every point is local to its own band, in CSS pixels.
       const bands = [];
@@ -561,8 +1211,6 @@
       let tool = 'pen';
       let gesture = null;
       let activeBandIndex = 0;
-      let lastPenUpBand = null;
-      let commitTimer = null;
       let resizeObserver = null;
       let tutorRequestsInFlight = 0;
       let persistenceTimer = null;
@@ -572,6 +1220,10 @@
       let desmosLoadPromise = null;
       let lastGoodGraph = null;
       let solvedState = false;
+      let muted = false;
+      let audioContext = null;
+      let duckBubbleTimer = null;
+      let receiptReviewVersion = 0;
       const allNudges = [];
       const eventLog = [];
       window.eventLog = eventLog;
@@ -593,6 +1245,84 @@
         problemInput.value = savedWorksheet.activeProblem;
       }
       let activeProblem = problemInput.value.trim();
+
+      function ensureAudioContext() {
+        if (muted) return null;
+        try {
+          if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+          return audioContext;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function playTone(frequency, duration, type = 'sine', peak = 0.05, delay = 0) {
+        const context = ensureAudioContext();
+        if (!context) return;
+        try {
+          const startsAt = context.currentTime + delay;
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.type = type;
+          oscillator.frequency.setValueAtTime(frequency, startsAt);
+          gain.gain.setValueAtTime(0.0001, startsAt);
+          gain.gain.exponentialRampToValueAtTime(peak, startsAt + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startsAt + duration);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(startsAt);
+          oscillator.stop(startsAt + duration + 0.02);
+        } catch (_) {}
+      }
+
+      function playNoise(duration, cutoff, peak) {
+        const context = ensureAudioContext();
+        if (!context) return;
+        try {
+          const frameCount = Math.floor(context.sampleRate * duration);
+          const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let index = 0; index < frameCount; index++) {
+            data[index] = (Math.random() * 2 - 1) * (1 - index / frameCount);
+          }
+          const source = context.createBufferSource();
+          const filter = context.createBiquadFilter();
+          const gain = context.createGain();
+          source.buffer = buffer;
+          filter.type = 'lowpass';
+          filter.frequency.value = cutoff;
+          gain.gain.setValueAtTime(peak, context.currentTime);
+          source.connect(filter).connect(gain).connect(context.destination);
+          source.start();
+        } catch (_) {}
+      }
+
+      function soundTick() {
+        playTone(880, 0.16, 'sine', 0.06);
+        playTone(1320, 0.10, 'sine', 0.03, 0.02);
+      }
+
+      function soundWrong() {
+        playTone(220, 0.4, 'triangle', 0.045);
+        playTone(196, 0.42, 'triangle', 0.03, 0.05);
+      }
+
+      function soundPop() {
+        playTone(1100, 0.09, 'sine', 0.045);
+      }
+
+      function soundPaper() {
+        playNoise(0.22, 2200, 0.035);
+      }
+
+      function showDuckMessage(message) {
+        clearTimeout(duckBubbleTimer);
+        duckBubble.textContent = message;
+        duckBubble.hidden = false;
+        duckBubbleTimer = setTimeout(() => {
+          duckBubble.hidden = true;
+        }, 5200);
+      }
 
       function readSavedWorksheet() {
         try {
@@ -636,6 +1366,7 @@
             schemaVersion: SCHEMA_VERSION,
             activeProblem,
             bands: bands.map(band => ({
+              committed: band.lastCommittedRevision > 0,
               strokes: cloneStrokes(band.strokes),
               latex: band.latex,
               verdict: band.verdict,
@@ -684,10 +1415,10 @@
         return BASE_WIDTH * (0.78 + Math.min(1, p) * 0.44);
       }
 
-      function createBand() {
+      function createBand(submitted = false) {
         const index = bands.length;
         const element = document.createElement('section');
-        element.className = 'band';
+        element.className = `band ${submitted ? 'submitted-band' : 'composition-band'}`;
         element.dataset.bandIndex = index;
 
         const canvas = document.createElement('canvas');
@@ -700,7 +1431,7 @@
         const verdictMarker = document.createElement('span');
         verdictMarker.className = 'verdict-marker';
         element.append(canvas, transcript, verdictMarker);
-        worksheet.append(element);
+        (submitted ? submittedSteps : compositionHost).append(element);
 
         const band = {
           strokes: [],
@@ -714,12 +1445,13 @@
           verificationVersion: 0,
           verificationPending: false,
           verdict: null,
+          lastSettledVerdict: null,
+          lastSettledLatex: null,
           setupReason: null,
-          tutorRevision: 0,
-          lastNudgedTutorRevision: -1,
           nudgeHistory: [],
           selfCorrectionCandidate: null,
           selfCorrectionPending: null,
+          submitted,
           verdictMarker,
           element,
           canvas
@@ -733,17 +1465,27 @@
         canvas.addEventListener('pointerup', event => pointerUp(event, index));
         canvas.addEventListener('pointercancel', event => pointerUp(event, index));
         transcript.addEventListener('click', () => editTranscript(index));
+        updateCompositionHint();
         return band;
       }
 
       function sizeCanvas(band) {
-        const width = Math.max(1, Math.round(band.canvas.getBoundingClientRect().width));
-        // The visible canvas intentionally uses a 1x backing store. Export uses 2x.
-        if (band.canvas.width !== width || band.canvas.height !== BAND_HEIGHT) {
+        const rect = band.canvas.getBoundingClientRect();
+        const width = Math.max(1, Math.round(rect.width));
+        const height = Math.max(1, Math.round(rect.height));
+        // The backing store deliberately matches CSS pixels: no DPR or card scaling.
+        if (band.canvas.width !== width || band.canvas.height !== height) {
           band.canvas.width = width;
-          band.canvas.height = BAND_HEIGHT;
+          band.canvas.height = height;
           renderBand(band);
         }
+      }
+
+      function updateCompositionHint() {
+        const activeBand = bands[activeBandIndex];
+        const hasInk = activeBand && !activeBand.submitted && activeBand.strokes.length > 0;
+        compositionHint.classList.toggle('hidden', Boolean(hasInk));
+        nextStepButton.disabled = !hasInk;
       }
 
       function cloneStrokes(strokes) {
@@ -787,10 +1529,24 @@
             })));
           }
 
-          for (const savedBand of saved.bands) {
-            const band = createBand();
-            band.strokes = sanitizeStrokes(savedBand?.strokes);
-            band.latex = typeof savedBand?.latex === 'string' ? savedBand.latex : '';
+          // Older saves contain a tail of empty ruled bands. Only restore real work,
+          // then keep exactly one unsubmitted composition canvas at the bottom.
+          const savedBandEntries = saved.bands.map((savedBand, savedIndex) => ({
+            savedBand,
+            savedIndex,
+            strokes: sanitizeStrokes(savedBand?.strokes),
+            latex: typeof savedBand?.latex === 'string' ? savedBand.latex : ''
+          })).filter(entry => entry.strokes.length > 0 || Boolean(entry.latex));
+          const restoredIndexBySavedIndex = new Map();
+
+          savedBandEntries.forEach((entry, entryIndex) => {
+            const isLastEntry = entryIndex === savedBandEntries.length - 1;
+            const submitted = entry.savedBand?.committed !== false || !isLastEntry;
+            const band = createBand(submitted);
+            restoredIndexBySavedIndex.set(entry.savedIndex, bands.length - 1);
+            band.strokes = entry.strokes;
+            band.latex = entry.latex;
+            const savedBand = entry.savedBand;
             band.verdict = savedBand?.verdict === true
               ? true
               : savedBand?.verdict === false ? false : null;
@@ -798,14 +1554,15 @@
               ? savedBand.setupReason
               : null;
             band.nudgeHistory = Array.isArray(savedBand?.nudgeHistory)
-              ? savedBand.nudgeHistory.filter(value => typeof value === 'string')
+              ? savedBand.nudgeHistory
+                  .filter(value => typeof value === 'string')
+                  .slice(0, MAX_NUDGES_PER_LINE)
               : [];
 
-            const wasCommitted = band.strokes.length > 0 || Boolean(band.latex);
-            band.revision = wasCommitted ? 1 : 0;
-            band.lastCommittedRevision = band.revision;
-            band.tutorRevision = 0;
-            band.lastNudgedTutorRevision = band.nudgeHistory.length ? 0 : -1;
+            band.revision = 1;
+            band.lastCommittedRevision = submitted ? band.revision : 0;
+            band.lastSettledVerdict = band.verdict;
+            band.lastSettledLatex = band.latex;
             syncBandDebugState(band);
             renderBand(band);
             renderTranscript(band);
@@ -814,16 +1571,22 @@
               : band.verdict === false
                 ? { valid: false, errorType: 'not_equivalent' }
                 : null);
-          }
+          });
 
           const savedCards = Array.isArray(saved.nudgeFeed) ? saved.nudgeFeed : [];
+          const restoredCardCounts = new Map();
           for (const savedCard of savedCards) {
             if (typeof savedCard?.text !== 'string' || !savedCard.text) continue;
             const card = document.createElement('div');
             card.className = `nudge-card${savedCard.resolved ? ' resolved' : ''}`;
             card.textContent = savedCard.text;
             if (Number.isInteger(savedCard.lineIndex) && savedCard.lineIndex >= 0) {
-              card.dataset.lineIndex = savedCard.lineIndex;
+              const restoredIndex = restoredIndexBySavedIndex.get(savedCard.lineIndex);
+              if (restoredIndex === undefined) continue;
+              const count = restoredCardCounts.get(restoredIndex) || 0;
+              if (count >= MAX_NUDGES_PER_LINE) continue;
+              restoredCardCounts.set(restoredIndex, count + 1);
+              card.dataset.lineIndex = restoredIndex;
             }
             nudgeFeed.append(card);
           }
@@ -833,9 +1596,13 @@
             : savedCards.map(card => card?.text).filter(value => typeof value === 'string').reverse();
           allNudges.push(...restoredNudges);
 
-          if (!bands.length) createBand();
-          const lastBand = bands[bands.length - 1];
-          if (lastBand.strokes.length || lastBand.latex) createBand();
+          let compositionIndex = bands.findIndex(band => !band.submitted);
+          if (compositionIndex < 0) {
+            createBand(false);
+            compositionIndex = bands.length - 1;
+          }
+          activeBandIndex = compositionIndex;
+          updateCompositionHint();
           updateProblemDraftState();
         } finally {
           isRestoring = false;
@@ -853,7 +1620,7 @@
         const events = coalesced.length ? coalesced : [event];
         return events.map(e => ({
           x: Math.max(0, Math.min(rect.width, e.clientX - rect.left)),
-          y: Math.max(0, Math.min(BAND_HEIGHT, e.clientY - rect.top)),
+          y: Math.max(0, Math.min(rect.height, e.clientY - rect.top)),
           pressure: e.pressure > 0 ? e.pressure : 0.5,
           t: e.timeStamp
         }));
@@ -864,15 +1631,12 @@
           applyProblemDraft();
         }
         activeBandIndex = index;
-        clearTimeout(commitTimer);
-        if (lastPenUpBand !== null && lastPenUpBand !== index) {
-          commitBand(lastPenUpBand);
-        }
       }
 
       function pointerDown(event, index) {
         if (gesture || (event.pointerType === 'mouse' && event.button !== 0)) return;
         event.preventDefault();
+        ensureAudioContext();
         beginBandInteraction(index);
         const band = bands[index];
         band.canvas.setPointerCapture(event.pointerId);
@@ -890,6 +1654,7 @@
           band.strokes.push(stroke);
           gesture = { pointerId: event.pointerId, bandIndex: index, tool, changed: true };
           renderBand(band);
+          updateCompositionHint();
         } else {
           gesture = { pointerId: event.pointerId, bandIndex: index, tool, changed: false, undoSaved: false };
           eraseAtPoints(band, eventPoints(event, band.canvas));
@@ -925,13 +1690,12 @@
             renderTranscript(band);
             verifyAffectedLines(index);
           }
-          if (index === bands.length - 1 && band.strokes.length) createBand();
           renderBand(band);
+          updateCompositionHint();
         }
 
-        lastPenUpBand = index;
         gesture = null;
-        scheduleCommit(index);
+        schedulePersist();
       }
 
       function eraseAtPoints(band, points) {
@@ -954,6 +1718,7 @@
         gesture.changed = true;
         syncBandDebugState(band);
         renderBand(band);
+        updateCompositionHint();
         schedulePersist();
       }
 
@@ -984,16 +1749,19 @@
 
       function drawStroke(ctx, stroke, scale = 1, offsetX = 0, offsetY = 0) {
         if (!stroke.length) return;
+        const inkColor = scale <= 1
+          ? getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#201c16'
+          : '#201c16';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#171816';
+        ctx.strokeStyle = inkColor;
 
         if (stroke.length === 1) {
           const p = stroke[0];
           ctx.beginPath();
           ctx.arc((p.x - offsetX) * scale, (p.y - offsetY) * scale,
             pressureWidth(p.pressure) * scale / 2, 0, Math.PI * 2);
-          ctx.fillStyle = '#171816';
+          ctx.fillStyle = inkColor;
           ctx.fill();
           return;
         }
@@ -1026,13 +1794,62 @@
       function renderBand(band) {
         const ctx = band.canvas.getContext('2d');
         ctx.clearRect(0, 0, band.canvas.width, band.canvas.height);
-        band.strokes.forEach(stroke => drawStroke(ctx, stroke));
+        if (!band.submitted || !band.strokes.length) {
+          band.strokes.forEach(stroke => drawStroke(ctx, stroke));
+          return;
+        }
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        for (const stroke of band.strokes) {
+          for (const point of stroke) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+          }
+        }
+        const paddingX = 14;
+        const paddingY = 8;
+        const inkWidth = Math.max(1, maxX - minX);
+        const inkHeight = Math.max(1, maxY - minY);
+        // Submitted ink may shrink to fit its card, but it is never enlarged.
+        const scale = Math.min(
+          1,
+          Math.max(0.01, (band.canvas.width - paddingX * 2) / inkWidth),
+          Math.max(0.01, (band.canvas.height - paddingY * 2) / inkHeight)
+        );
+        const offsetX = minX - paddingX / scale;
+        const offsetY = minY - paddingY / scale;
+        band.strokes.forEach(stroke => drawStroke(ctx, stroke, scale, offsetX, offsetY));
       }
 
-      function scheduleCommit(index) {
-        clearTimeout(commitTimer);
-        if (!bands[index].strokes.length) return;
-        commitTimer = setTimeout(() => commitBand(index), 700);
+      function submitCurrentStep() {
+        if (gesture) return;
+        const band = bands[activeBandIndex];
+        if (!band || band.submitted || !band.strokes.length) return;
+
+        band.submitted = true;
+        band.element.classList.remove('composition-band');
+        band.element.classList.add('submitted-band');
+        submittedSteps.append(band.element);
+        sizeCanvas(band);
+        renderBand(band);
+        commitBand(activeBandIndex);
+
+        createBand(false);
+        activeBandIndex = bands.length - 1;
+        updateCompositionHint();
+        schedulePersist();
+
+        requestAnimationFrame(() => {
+          sizeCanvas(band);
+          sizeCanvas(bands[activeBandIndex]);
+          const scrollRegion = submittedSteps.closest('.submitted-scroll');
+          if (scrollRegion) scrollRegion.scrollTop = scrollRegion.scrollHeight;
+        });
       }
 
       function commitBand(index) {
@@ -1042,6 +1859,7 @@
         const committedAt = performance.now();
         const committedWallTime = Date.now();
         console.log(`[line ${index + 1}] commit fired`, new Date().toISOString());
+        soundPaper();
         schedulePersist();
         window.onLineCommit(index, committedAt, committedWallTime);
       }
@@ -1080,7 +1898,6 @@
             band.selfCorrectionCandidate = null;
           }
           band.latex = latex;
-          band.tutorRevision++;
           renderTranscript(band);
           appendJourneyEvent('line_commit', index + 1, { latex }, committedWallTime);
           const elapsed = Math.round(performance.now() - committedAt);
@@ -1272,23 +2089,37 @@
       async function verifyLine(index) {
         const band = bands[index];
         if (!band) return;
+        const previousSettledVerdict = band.lastSettledVerdict;
+        const previousSettledLatex = band.lastSettledLatex;
         const version = ++band.verificationVersion;
         band.verificationPending = false;
         band.verdict = null;
         if (index === 0) band.setupReason = null;
         renderVerdict(band, null);
 
-        if (!band.latex) return;
+        if (!band.latex) {
+          band.lastSettledVerdict = null;
+          band.lastSettledLatex = '';
+          return;
+        }
         let endpoint;
         let requestBody;
         if (index === 0) {
-          if (!activeProblem) return;
+          if (!activeProblem) {
+            band.lastSettledVerdict = null;
+            band.lastSettledLatex = band.latex;
+            return;
+          }
           endpoint = '/api/check-setup';
           requestBody = { problem: activeProblem, firstLine: band.latex };
           console.log('[setup check outgoing]', JSON.stringify(requestBody));
         } else {
           const previous = bands[index - 1];
-          if (!previous?.latex) return;
+          if (!previous?.latex) {
+            band.lastSettledVerdict = null;
+            band.lastSettledLatex = band.latex;
+            return;
+          }
           endpoint = '/api/verify';
           requestBody = { prev: previous.latex, current: band.latex };
         }
@@ -1315,13 +2146,24 @@
           band.verdict = verdict.valid === true
             ? true
             : verdict.errorType === 'not_equivalent' ? false : null;
+          const settledStateChanged = (
+            previousSettledVerdict !== band.verdict || previousSettledLatex !== band.latex
+          );
+          const shouldNudge = band.verdict === false && settledStateChanged;
+          band.lastSettledVerdict = band.verdict;
+          band.lastSettledLatex = band.latex;
           renderVerdict(band, verdict);
-          if (band.verdict !== null) {
+          if (band.verdict !== null && settledStateChanged) {
             appendJourneyEvent('verdict', index + 1, {
               verdict: band.verdict ? 'valid' : 'not_equivalent',
               latex: band.latex,
               setupReason: band.setupReason
             });
+            if (band.verdict) {
+              soundTick();
+            } else {
+              soundWrong();
+            }
           }
           if (band.verdict === true && band.selfCorrectionPending) {
             appendJourneyEvent('self_correction', index + 1, {
@@ -1334,7 +2176,7 @@
           schedulePersist();
           if (band.verdict === true) {
             fadeLineNudges(index);
-          } else if (band.verdict === false) {
+          } else if (shouldNudge) {
             requestLineNudge(index, version);
           }
           maybeRecordSolved();
@@ -1380,14 +2222,17 @@
       async function requestLineNudge(index, verificationVersion) {
         const band = bands[index];
         if (!band || band.verdict !== false || band.transcriptionPending || band.verificationPending) return;
-        const tutorRevision = band.tutorRevision;
-        if (band.lastNudgedTutorRevision >= tutorRevision) return;
+        const latexAtRequest = band.latex;
 
         const targetIndex = rootNudgeBandIndex(index);
         const targetBand = bands[targetIndex];
+        const targetLatexAtRequest = targetBand?.latex;
         const context = tutorContext(index, targetIndex);
         if (!targetBand || context.flaggedLine < 0 || context.targetLine < 0) return;
-        band.lastNudgedTutorRevision = tutorRevision;
+        if (targetBand.nudgeHistory.length >= MAX_NUDGES_PER_LINE) {
+          console.debug(`[line ${targetIndex + 1}] nudge ladder capped at ${MAX_NUDGES_PER_LINE}`);
+          return;
+        }
 
         try {
           const nudge = await fetchNudge({
@@ -1395,11 +2240,16 @@
             nudgeHistory: [...targetBand.nudgeHistory],
             studentMessage: ''
           });
-          if (band.tutorRevision !== tutorRevision ||
+          if (band.latex !== latexAtRequest ||
+              targetBand.latex !== targetLatexAtRequest ||
               band.verificationVersion !== verificationVersion ||
               band.verdict !== false ||
               band.transcriptionPending ||
               band.verificationPending) return;
+          if (targetBand.nudgeHistory.length >= MAX_NUDGES_PER_LINE) {
+            console.debug(`[line ${targetIndex + 1}] concurrent nudge discarded at ladder cap`);
+            return;
+          }
           if (hasDuplicateNudge(nudge, targetBand)) {
             console.warn(`[line ${targetIndex + 1}] duplicate nudge discarded`, nudge);
             return;
@@ -1442,16 +2292,26 @@
         tutorStatusLabel.textContent = thinking ? 'thinking…' : 'watching';
         tutorStatusDot.className = `status-dot ${thinking ? 'thinking' : 'watching'}`;
         tutorStatusDot.title = thinking ? 'Thinking' : 'Watching';
+        duckCorner.classList.toggle('thinking', thinking);
         sendButton.disabled = thinking;
       }
 
       function addNudgeCard(nudge, lineIndex = null) {
+        if (lineIndex !== null) {
+          const existingCards = nudgeFeed.querySelectorAll(`.nudge-card[data-line-index="${lineIndex}"]`);
+          if (existingCards.length >= MAX_NUDGES_PER_LINE) {
+            console.debug(`[line ${lineIndex + 1}] nudge card discarded at ladder cap`);
+            return;
+          }
+        }
         const card = document.createElement('div');
         card.className = 'nudge-card';
         card.textContent = nudge;
         if (lineIndex !== null) card.dataset.lineIndex = lineIndex;
         nudgeFeed.prepend(card);
         allNudges.push(nudge);
+        soundPop();
+        showDuckMessage(nudge);
         schedulePersist();
       }
 
@@ -1768,20 +2628,27 @@
         const invalidEvents = eventLog.filter(event =>
           event.type === 'verdict' && event.detail?.verdict === 'not_equivalent'
         );
-        const mistakesByLine = new Map();
+        const errorsMadeLines = new Set();
         invalidEvents.forEach(event => {
-          if (!mistakesByLine.has(event.line)) mistakesByLine.set(event.line, event.detail?.latex || '');
+          if (Number.isInteger(event.line)) errorsMadeLines.add(event.line);
         });
         const nudgeEvents = eventLog.filter(event => event.type === 'nudge');
         const selfCorrections = eventLog.filter(event => event.type === 'self_correction');
+        const selfCorrectedLines = new Set(selfCorrections.map(event => event.line));
+        const linesStillWrong = committed.filter(({ band }) => band.verdict === false);
         const firstInk = eventLog.find(event => event.type === 'ink_started');
         const solvedEvent = eventLog.find(event => event.type === 'problem_solved');
+        const finalEntry = committed[committed.length - 1] || null;
         return {
           committed,
           solved: worksheetIsSolved(),
-          mistakesByLine,
+          errorsMadeLines,
+          linesStillWrong,
           nudgeEvents,
           selfCorrections,
+          selfCorrectedLines,
+          finalEntry,
+          hasFinalAnswer: Boolean(finalEntry && isFinalAnswerLatex(finalEntry.band.latex)),
           maxNudgeLevel: nudgeEvents.reduce((maximum, event) =>
             Math.max(maximum, Number(event.detail?.level) || 0), 0),
           elapsed: firstInk && solvedEvent ? solvedEvent.t - firstInk.t : null
@@ -1804,39 +2671,128 @@
         return metric;
       }
 
-      function renderReceipt() {
+      function renderReceiptMath(element, latex, displayMode = false) {
+        element.replaceChildren();
+        try {
+          katex.render(latex, element, { throwOnError: true, displayMode });
+        } catch (error) {
+          console.warn('[receipt] could not render maths', error);
+          element.textContent = 'Maths unavailable';
+        }
+      }
+
+      function renderReceiptProblem(element) {
+        const source = activeProblem.trim();
+        if (!source) {
+          element.textContent = 'No problem statement provided.';
+          return;
+        }
+
+        const instructionMatch = source.match(/^\s*((?:solve|find|calculate|determine)(?:\s+for\s+[A-Za-z])?\s*:?)[\s]*(.+)$/i);
+        const possibleMaths = instructionMatch ? instructionMatch[2] : source;
+        if (splitTopLevelEquation(possibleMaths)) {
+          if (instructionMatch) {
+            const instruction = document.createElement('span');
+            instruction.textContent = `${instructionMatch[1].replace(/\s*:?\s*$/, '')}: `;
+            element.append(instruction);
+          }
+          const maths = document.createElement('span');
+          element.append(maths);
+          renderReceiptMath(maths, possibleMaths);
+          return;
+        }
+
+        // Worded questions remain prose; every known symbolic line is rendered separately.
+        element.textContent = source;
+      }
+
+      function receiptHeadline(model, answerReview, reviewing) {
+        if (!model.hasFinalAnswer) {
+          return { title: 'Still in progress', detail: 'No final answer has been recorded yet.' };
+        }
+        if (reviewing) {
+          return {
+            title: 'Reviewing the final answer…',
+            detail: 'Comparing the final line with the original problem.'
+          };
+        }
+        if (answerReview?.finalAnswerCorrect === true && model.solved) {
+          return {
+            title: 'Solved properly',
+            detail: 'The final answer is correct and every recorded step supports it.'
+          };
+        }
+        if (answerReview?.finalAnswerCorrect === true) {
+          return {
+            title: 'Right answer, broken working',
+            detail: 'The final answer matches the true solution, but the recorded working contains a break in the chain.'
+          };
+        }
+        if (answerReview?.finalAnswerCorrect === false) {
+          return {
+            title: 'Wrong answer',
+            detail: 'The final line does not match the solution to the original problem.'
+          };
+        }
+        return {
+          title: 'Still in progress',
+          detail: 'The final answer could not yet be compared reliably with the original problem.'
+        };
+      }
+
+      function lineList(lines) {
+        if (!lines.length) return '';
+        if (lines.length === 1) return `line ${lines[0]}`;
+        if (lines.length === 2) return `lines ${lines[0]} and ${lines[1]}`;
+        return `lines ${lines.slice(0, -1).join(', ')}, and ${lines[lines.length - 1]}`;
+      }
+
+      function renderReceipt(answerReview = null, reviewing = false) {
         const model = receiptModel();
         receiptContent.replaceChildren();
 
-        const problem = document.createElement('p');
+        const problem = document.createElement('div');
         problem.className = 'receipt-problem';
-        problem.textContent = activeProblem || 'No problem statement provided.';
-        const status = document.createElement('p');
-        status.className = 'receipt-status';
-        status.textContent = model.solved ? 'Solved · all recorded steps valid' : 'Work in progress';
+        renderReceiptProblem(problem);
 
-        const mistakeLines = [...model.mistakesByLine.keys()].filter(Number.isInteger);
-        const mistakePhrase = mistakeLines.length
-          ? `${mistakeLines.length} ${plural(mistakeLines.length, 'line')} flagged (${mistakeLines.map(line => `line ${line}`).join(', ')})`
-          : 'no lines flagged';
-        const nudgePhrase = model.nudgeEvents.length
-          ? `${model.nudgeEvents.length} ${plural(model.nudgeEvents.length, 'nudge')}`
-          : 'no nudges';
-        const correctionPhrase = model.selfCorrections.length
-          ? `${model.selfCorrections.length} self-${plural(model.selfCorrections.length, 'correction')}`
-          : 'no self-corrections recorded';
+        const headlineCopy = receiptHeadline(model, answerReview, reviewing);
+        const headline = document.createElement('section');
+        headline.className = 'receipt-headline';
+        const headlineLabel = document.createElement('div');
+        headlineLabel.className = 'receipt-headline-label';
+        headlineLabel.textContent = 'Final review';
+        const headlineTitle = document.createElement('h2');
+        headlineTitle.className = 'receipt-headline-title';
+        headlineTitle.textContent = headlineCopy.title;
+        const headlineDetail = document.createElement('p');
+        headlineDetail.className = 'receipt-headline-detail';
+        headlineDetail.textContent = headlineCopy.detail;
+        headline.append(headlineLabel, headlineTitle, headlineDetail);
+
+        const errorLines = [...model.errorsMadeLines];
+        const stillWrongLines = model.linesStillWrong.map(({ index }) => index + 1);
+        const correctedErrorLines = errorLines.filter(line =>
+          model.selfCorrectedLines.has(line) && bands[line - 1]?.verdict === true
+        );
         const evidence = document.createElement('p');
         evidence.className = 'receipt-evidence';
-        evidence.textContent = model.selfCorrections.length
-          ? `${model.solved ? 'Solved' : 'Worked'} in ${model.committed.length} ${plural(model.committed.length, 'step')}; ${mistakePhrase}; ${correctionPhrase} after ${nudgePhrase}.`
-          : `${model.solved ? 'Solved' : 'Worked'} in ${model.committed.length} ${plural(model.committed.length, 'step')}; ${mistakePhrase}; ${nudgePhrase}; no self-corrections recorded.`;
+        const errorSummary = errorLines.length
+          ? `${errorLines.length} ${plural(errorLines.length, 'error')} made during the journey`
+          : 'no errors recorded during the journey';
+        const correctionSummary = model.selfCorrections.length
+          ? `${model.selfCorrections.length} self-${plural(model.selfCorrections.length, 'correction')}`
+          : 'no self-corrections recorded';
+        const finalStateSummary = stillWrongLines.length
+          ? `${lineList(stillWrongLines)} ${stillWrongLines.length === 1 ? 'is' : 'are'} still amber`
+          : 'no lines are still amber';
+        evidence.textContent = `${model.committed.length} ${plural(model.committed.length, 'step')} recorded; ${errorSummary}; ${correctionSummary}; ${finalStateSummary}.`;
 
-        const mistakeDetail = mistakeLines.length
-          ? mistakeLines.map(line => {
-              const latex = model.mistakesByLine.get(line);
-              return `Line ${line}${latex ? `: ${latex}` : ''}`;
-            }).join(' · ')
-          : 'No not-equivalent verdicts recorded.';
+        const errorsMadeDetail = errorLines.length
+          ? `Occurred on ${lineList(errorLines)}.${correctedErrorLines.length ? ` ${lineList(correctedErrorLines)} ${correctedErrorLines.length === 1 ? 'was' : 'were'} later self-corrected.` : ''}`
+          : 'No not-equivalent verdicts were recorded.';
+        const stillWrongDetail = stillWrongLines.length
+          ? `${lineList(stillWrongLines)} ${stillWrongLines.length === 1 ? 'remains' : 'remain'} amber in the final derivation.`
+          : 'Every currently verified line is green.';
         const nudgeDetail = model.maxNudgeLevel
           ? `Deepest support: level ${model.maxNudgeLevel} (${model.maxNudgeLevel === 1 ? 'location' : model.maxNudgeLevel === 2 ? 'operation' : 'concept'}).`
           : 'No tutor intervention recorded.';
@@ -1851,7 +2807,8 @@
         metrics.className = 'receipt-metrics';
         metrics.append(
           receiptMetric('Steps taken', String(model.committed.length), `Time from first ink: ${model.solved ? formatElapsed(model.elapsed) : 'not solved yet'}`),
-          receiptMetric('Mistakes identified', String(mistakeLines.length), mistakeDetail),
+          receiptMetric('Errors made', String(errorLines.length), errorsMadeDetail),
+          receiptMetric('Lines still wrong', String(stillWrongLines.length), stillWrongDetail),
           receiptMetric('Nudges needed', String(model.nudgeEvents.length), nudgeDetail),
           receiptMetric('Self-corrections', String(model.selfCorrections.length), correctionDetail, true)
         );
@@ -1859,7 +2816,7 @@
         const derivationTitle = document.createElement('h2');
         derivationTitle.className = 'receipt-section-title';
         derivationTitle.textContent = 'Final derivation and attached support';
-        receiptContent.append(problem, status, evidence, metrics, derivationTitle);
+        receiptContent.append(problem, headline, evidence, metrics, derivationTitle);
 
         if (!model.committed.length) {
           const empty = document.createElement('div');
@@ -1871,7 +2828,6 @@
 
         const derivation = document.createElement('div');
         derivation.className = 'receipt-derivation';
-        const correctedLines = new Set(model.selfCorrections.map(event => event.line));
         model.committed.forEach(({ band, index }) => {
           const row = document.createElement('section');
           row.className = 'receipt-line';
@@ -1880,12 +2836,12 @@
           lineNumber.textContent = `Line ${index + 1}`;
           const math = document.createElement('div');
           math.className = 'receipt-line-math';
-          katex.render(band.latex, math, { throwOnError: false, displayMode: false });
+          renderReceiptMath(math, band.latex);
           const verdict = document.createElement('div');
           verdict.className = 'receipt-line-verdict';
           verdict.textContent = band.verdict === true
-            ? `Valid${correctedLines.has(index + 1) ? ' · self-corrected' : ''}`
-            : band.verdict === false ? 'Flagged' : 'Not verified';
+            ? `Valid${model.selfCorrectedLines.has(index + 1) ? ' · self-corrected' : ''}`
+            : band.verdict === false ? 'Still wrong' : 'Not verified';
           row.append(lineNumber, math, verdict);
           if (band.nudgeHistory.length) {
             const nudges = document.createElement('div');
@@ -1900,13 +2856,50 @@
         receiptContent.append(derivation);
       }
 
-      function openReceipt() {
-        renderReceipt();
+      async function fetchReceiptAnswerReview(model) {
+        if (!model.hasFinalAnswer || !model.finalEntry || !model.committed.length) return null;
+        const response = await fetch('/api/review-answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            problem: activeProblem,
+            firstLine: model.committed[0].band.latex,
+            firstLineValid: model.committed[0].band.verdict,
+            finalLine: model.finalEntry.band.latex
+          })
+        });
+        if (!response.ok) throw new Error(`Answer review failed (${response.status})`);
+        const result = await response.json();
+        if (![true, false, null].includes(result.finalAnswerCorrect)) {
+          throw new Error('Invalid answer review response');
+        }
+        return result;
+      }
+
+      async function openReceipt() {
+        const reviewVersion = ++receiptReviewVersion;
         receiptView.hidden = false;
         receiptView.scrollTop = 0;
+        const model = receiptModel();
+        if (!model.hasFinalAnswer) {
+          renderReceipt();
+          return;
+        }
+
+        renderReceipt(null, true);
+        try {
+          const answerReview = await fetchReceiptAnswerReview(model);
+          if (reviewVersion !== receiptReviewVersion || receiptView.hidden) return;
+          renderReceipt(answerReview);
+        } catch (error) {
+          console.warn('[receipt] final answer review unavailable', error);
+          if (reviewVersion !== receiptReviewVersion || receiptView.hidden) return;
+          renderReceipt({ finalAnswerCorrect: null, errorType: 'unparseable' });
+        }
       }
 
       function closeReceipt() {
+        receiptReviewVersion++;
         receiptView.hidden = true;
       }
 
@@ -1933,8 +2926,11 @@
 
       function plotGraphState(state) {
         try {
-          const blue = '#2d70b3';
-          const amber = '#c78632';
+          const themeStyles = getComputedStyle(document.documentElement);
+          const blue = themeStyles.getPropertyValue('--accent').trim() || '#33507e';
+          const amber = themeStyles.getPropertyValue('--wrong').trim() || '#a6742c';
+          const graphInk = themeStyles.getPropertyValue('--ink').trim() || '#201c16';
+          const graphMuted = themeStyles.getPropertyValue('--muted').trim() || '#8b8577';
           const desmosNumber = value => String(Number(value.toPrecision(12)));
           desmosCalculator.setExpressions([
             { id: 'current-left', latex: `y=${state.current.left}`, color: blue, lineWidth: 3 },
@@ -1942,7 +2938,7 @@
             {
               id: 'current-intersection',
               latex: `(${desmosNumber(state.current.x)},${desmosNumber(state.current.y)})`,
-              color: '#171816',
+              color: graphInk,
               pointSize: 13,
               pointStyle: Desmos.Styles.POINT,
               showLabel: true,
@@ -1971,7 +2967,7 @@
               {
                 id: 'previous-intersection',
                 latex: `(${desmosNumber(state.previous.x)},${desmosNumber(state.previous.y)})`,
-                color: '#777872',
+                color: graphMuted,
                 pointSize: 8,
                 pointOpacity: 0.45,
                 showLabel: true,
@@ -2092,7 +3088,6 @@
           if (!input.isConnected) return;
           band.latex = input.value.trim();
           if (band.latex !== originalLatex) {
-            band.tutorRevision++;
             if (wasInvalidAtEditStart) {
               band.selfCorrectionPending = {
                 from: originalLatex,
@@ -2155,12 +3150,67 @@
         eraserButton.setAttribute('aria-pressed', String(tool === 'eraser'));
       }
 
+      function toggleMute() {
+        muted = !muted;
+        muteButton.textContent = muted ? '♩' : '♪';
+        muteButton.classList.toggle('active', muted);
+        muteButton.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+        muteButton.title = muted ? 'Unmute sound' : 'Mute sound';
+      }
+
+      function toggleTheme() {
+        const night = document.documentElement.dataset.theme !== 'night';
+        document.documentElement.dataset.theme = night ? 'night' : 'day';
+        themeButton.textContent = night ? '☀' : '☾';
+        themeButton.setAttribute('aria-label', night ? 'Use light theme' : 'Use dark theme');
+        themeButton.title = night ? 'Use light theme' : 'Use dark theme';
+        bands.forEach(renderBand);
+        try {
+          desmosCalculator?.updateSettings({ invertedColors: night });
+          if (desmosCalculator && lastGoodGraph) plotGraphState(lastGoodGraph);
+        } catch (error) {
+          console.debug('[theme] graph theme unavailable', error);
+        }
+      }
+
+      function showAppScreen(screen) {
+        landingScreen.hidden = screen !== 'landing';
+        hubScreen.hidden = screen !== 'hub';
+        workspaceScreen.hidden = screen !== 'workspace';
+        receiptView.hidden = true;
+
+        if (screen === 'hub') {
+          hubProblemPreview.textContent = activeProblem || 'Start a maths problem';
+        }
+        if (screen === 'workspace') {
+          showSidePanel('graph');
+          requestAnimationFrame(() => {
+            bands.forEach(sizeCanvas);
+            updateCompositionHint();
+          });
+        }
+      }
+
       penButton.addEventListener('click', () => setTool('pen'));
       eraserButton.addEventListener('click', () => setTool('eraser'));
+      muteButton.addEventListener('click', toggleMute);
+      themeButton.addEventListener('click', toggleTheme);
+      nextStepButton.addEventListener('click', submitCurrentStep);
+      brandButton.addEventListener('click', () => {
+        soundPop();
+        showAppScreen('hub');
+      });
+      openNotebookButton.addEventListener('click', () => {
+        soundPop();
+        showAppScreen('hub');
+      });
+      openMathsButton.addEventListener('click', () => {
+        soundPop();
+        showAppScreen('workspace');
+      });
       undoButton.addEventListener('click', () => {
         const band = bands[activeBandIndex];
-        if (!band || !band.history.length) return;
-        clearTimeout(commitTimer);
+        if (!band || band.submitted || !band.history.length) return;
         if (band.verdict === false) {
           band.selfCorrectionCandidate = { from: band.latex };
         }
@@ -2170,9 +3220,8 @@
         band.revision++;
         syncBandDebugState(band);
         renderBand(band);
+        updateCompositionHint();
         schedulePersist();
-        lastPenUpBand = activeBandIndex;
-        scheduleCommit(activeBandIndex);
       });
 
       problemInput.addEventListener('input', updateProblemDraftState);
@@ -2219,7 +3268,8 @@
         restoreWorksheet(savedWorksheet);
         console.log(`[persistence] restored ${bands.length} bands without API calls`);
       } else {
-        for (let i = 0; i < 8; i++) createBand();
+        createBand(false);
+        activeBandIndex = 0;
         if (restoredProblem !== null) schedulePersist();
       }
       updateGraphFromWorkspace();
@@ -2232,6 +3282,8 @@
         }
       });
       bands.forEach(band => resizeObserver.observe(band.canvas));
+
+      showAppScreen(restoredProblem !== null ? 'workspace' : 'landing');
 
       window.addEventListener('resize', () => bands.forEach(sizeCanvas));
       window.addEventListener('pagehide', persistWorksheet);
